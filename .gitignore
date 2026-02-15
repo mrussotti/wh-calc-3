@@ -15,6 +15,9 @@ dist-ssr
 # Generated data
 src/data/generated/
 
+# Claude Code
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -22,9 +22,15 @@ let _data: WahapediaData | null = null;
 
 export async function loadWahapediaData(): Promise<WahapediaData> {
   if (_data) return _data;
-  const mod = await import('./generated/wahapedia.json');
-  _data = mod.default as unknown as WahapediaData;
-  return _data;
+  try {
+    const mod = await import('./generated/wahapedia.json');
+    _data = mod.default as unknown as WahapediaData;
+    return _data;
+  } catch {
+    throw new Error(
+      'Wahapedia data not found. Run "npm run fetch-data" to download it before importing an army list.'
+    );
+  }
 }
 
 export function getLoadedData(): WahapediaData {
