@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card View Mockup - Orks Army List</title>
+<style>
+  /* ── Reset & Base ─────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-darkest:   #0d0e10;
+    --bg-dark:      #141619;
+    --bg-card:      #1a1d22;
+    --bg-card-head: #22262d;
+    --bg-stat:      #181b20;
+    --bg-sidebar:   #13151a;
+    --border:       #2a2e36;
+    --border-light: #363b45;
+    --text:         #d4d4d8;
+    --text-dim:     #8b8f99;
+    --text-bright:  #eeeef0;
+    --ork-green:    #5B8C2A;
+    --ork-green-l:  #74a63e;
+    --ork-green-d:  #3e6118;
+    --accent-gold:  #c9a84c;
+    --accent-red:   #a83232;
+    --role-char:    #b07ccf;
+    --role-battle:  #4a90d9;
+    --role-trans:   #c9a84c;
+    --role-other:   #6b7280;
+    --capacity-bg:  #1e2128;
+    --drop-highlight: rgba(91,140,42,0.25);
+    --font-main:    'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-head:    Georgia, 'Times New Roman', serif;
+    --radius:       6px;
+    --radius-sm:    4px;
+    --shadow:       0 2px 8px rgba(0,0,0,0.45);
+    --shadow-lg:    0 4px 20px rgba(0,0,0,0.6);
+  }
+
+  html { font-size: 14px; }
+
+  body {
+    font-family: var(--font-main);
+    background: var(--bg-darkest);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Army Header ──────────────────────────────────────────────── */
+  .army-header {
+    background: linear-gradient(135deg, #1a1d22 0%, #22262d 100%);
+    border-bottom: 3px solid var(--ork-green);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .army-header .faction-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--ork-green-d);
+    border: 2px solid var(--ork-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    color: var(--ork-green-l);
+    font-weight: bold;
+    font-family: var(--font-head);
+  }
+
+  .army-header .army-title {
+    flex: 1;
+  }
+
+  .army-header .army-title h1 {
+    font-family: var(--font-head);
+    font-size: 1.45rem;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+  }
+
+  .army-header .army-title .army-meta {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .army-header .army-title .army-meta span {
+    color: var(--ork-green-l);
+    font-weight: 600;
+  }
+
+  .army-header .pts-badge {
+    background: var(--ork-green-d);
+    border: 1px solid var(--ork-green);
+    color: var(--ork-green-l);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-darkest);
+    padding: 3px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .view-toggle button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: var(--font-main);
+    transition: all 0.15s;
+  }
+
+  .view-toggle button.active {
+    background: var(--ork-green-d);
+    color: var(--ork-green-l);
+  }
+
+  .view-toggle button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────── */
+  .app-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .card-area {
+    flex: 1;
+    padding: 20px 24px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .card-area::-webkit-scrollbar { width: 7px; }
+  .card-area::-webkit-scrollbar-track { background: transparent; }
+  .card-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── Role Group Headers ───────────────────────────────────────── */
+  .role-group {
+    margin-bottom: 28px;
+  }
+
+  .role-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .role-group-header h2 {
+    font-family: var(--font-head);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  .role-group-header .role-count {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    background: var(--bg-stat);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Card Grid ────────────────────────────────────────────────── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── Unit Card ────────────────────────────────────────────────── */
+  .unit-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .unit-card:hover {
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .unit-card.is-warlord {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 1px var(--accent-gold), var(--shadow);
+  }
+
+  /* Card Header */
+  .card-head {
+    background: var(--bg-card-head);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .card-head .role-pip {
+    width: 4px;
+    height: 32px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .role-pip.character  { background: var(--role-char); }
+  .role-pip.battleline { background: var(--role-battle); }
+  .role-pip.transport  { background: var(--role-trans); }
+  .role-pip.other      { background: var(--role-other); }
+
+  .card-head .unit-name {
+    flex: 1;
+    font-family: var(--font-head);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1.2;
+  }
+
+  .card-head .unit-name .sub-model {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    font-family: var(--font-main);
+    margin-top: 1px;
+  }
+
+  .card-head .enhancement-tag {
+    font-size: 0.68rem;
+    background: rgba(176,124,207,0.15);
+    color: var(--role-char);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(176,124,207,0.3);
+    white-space: nowrap;
+  }
+
+  .card-head .warlord-crown {
+    font-size: 0.68rem;
+    background: rgba(201,168,76,0.15);
+    color: var(--accent-gold);
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(201,168,76,0.3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .card-head .role-badge {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .role-badge.character  { background: rgba(176,124,207,0.12); color: var(--role-char); border: 1px solid rgba(176,124,207,0.25); }
+  .role-badge.battleline { background: rgba(74,144,217,0.12); color: var(--role-battle); border: 1px solid rgba(74,144,217,0.25); }
+  .role-badge.transport  { background: rgba(201,168,76,0.12); color: var(--role-trans); border: 1px solid rgba(201,168,76,0.25); }
+
+  .card-head .pts {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ork-green-l);
+    white-space: nowrap;
+  }
+
+  /* Stat Line */
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    background: var(--bg-stat);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-bar .stat {
+    text-align: center;
+    padding: 5px 2px;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat-bar .stat:last-child { border-right: none; }
+
+  .stat-bar .stat .stat-label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 1px;
+  }
+
+  .stat-bar .stat .stat-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  /* Card Body */
+  .card-body {
+    padding: 10px 14px 12px;
+  }
+
+  /* Composition */
+  .composition {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.4;
+  }
+
+  .composition strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Weapons Table */
+  .section-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .weapons-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 0.76rem;
+  }
+
+  .weapons-table thead th {
+    text-align: center;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    padding: 3px 4px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+
+  .weapons-table thead th:first-child {
+    text-align: left;
+    width: 40%;
+  }
+
+  .weapons-table tbody td {
+    padding: 3px 4px;
+    text-align: center;
+    border-bottom: 1px solid rgba(42,46,54,0.5);
+    color: var(--text);
+  }
+
+  .weapons-table tbody td:first-child {
+    text-align: left;
+    color: var(--text-bright);
+    font-weight: 500;
+  }
+
+  .weapons-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .weapons-table .melee-icon,
+  .weapons-table .ranged-icon {
+    font-size: 0.65rem;
+    margin-right: 3px;
+    opacity: 0.6;
+  }
+
+  .weapons-table .weapon-keyword {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* Abilities */
+  .abilities-section {
+    margin-bottom: 8px;
+  }
+
+  .ability-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .ability-chip {
+    font-size: 0.7rem;
+    background: rgba(91,140,42,0.1);
+    color: var(--ork-green-l);
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(91,140,42,0.2);
+  }
+
+  .ability-chip.core {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim);
+    border-color: var(--border);
+  }
+
+  .ability-chip.faction {
+    background: rgba(201,168,76,0.08);
+    color: var(--accent-gold);
+    border-color: rgba(201,168,76,0.2);
+  }
+
+  /* Keywords */
+  .keywords-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .kw-tag {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    background: var(--bg-stat);
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Leader Attachment Area ───────────────────────────────────── */
+  .leader-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .leader-section .section-label {
+    color: var(--role-char);
+  }
+
+  .leader-dropdown {
+    width: 100%;
+    padding: 6px 10px;
+    background: var(--bg-stat);
+    border: 1px dashed rgba(176,124,207,0.3);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-family: var(--font-main);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b8f99'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .leader-dropdown:focus {
+    outline: none;
+    border-color: var(--role-char);
+  }
+
+  .leader-assigned {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: rgba(176,124,207,0.08);
+    border: 1px solid rgba(176,124,207,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+  }
+
+  .leader-assigned .assigned-name {
+    color: var(--role-char);
+    font-weight: 600;
+  }
+
+  .leader-assigned .unassign-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    padding: 0 2px;
+  }
+
+  .leader-assigned .unassign-btn:hover {
+    color: var(--accent-red);
+  }
+
+  /* ── Transport Carrying Area ──────────────────────────────────── */
+  .transport-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .transport-section .section-label {
+    color: var(--role-trans);
+  }
+
+  .capacity-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .capacity-track {
+    flex: 1;
+    height: 6px;
+    background: var(--capacity-bg);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .capacity-fill {
+    height: 100%;
+    background: var(--ork-green);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .capacity-fill.over { background: var(--accent-red); }
+
+  .capacity-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 44px;
+    text-align: right;
+  }
+
+  .transport-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .transport-unit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: var(--radius-sm);
+    font-size: 0.76rem;
+  }
+
+  .transport-unit .tu-name {
+    flex: 1;
+    color: var(--text);
+  }
+
+  .transport-unit .tu-size {
+    color: var(--text-dim);
+    font-size: 0.68rem;
+  }
+
+  .transport-unit .tu-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    padding: 0 2px;
+  }
+
+  .transport-unit .tu-remove:hover { color: var(--accent-red); }
+
+  .transport-drop-zone {
+    padding: 8px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .transport-drop-zone:hover {
+    border-color: var(--role-trans);
+    background: rgba(201,168,76,0.05);
+    color: var(--role-trans);
+  }
+
+  /* ── Sidebar ──────────────────────────────────────────────────── */
+  .sidebar {
+    width: 280px;
+    background: var(--bg-sidebar);
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .sidebar-section h3 {
+    font-family: var(--font-head);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sidebar-section h3 .s-icon {
+    font-size: 0.75rem;
+  }
+
+  /* Pairing cards in sidebar */
+  .pairing-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    cursor: grab;
+    transition: border-color 0.15s;
+  }
+
+  .pairing-card:hover {
+    border-color: var(--border-light);
+  }
+
+  .pairing-card.dragging {
+    opacity: 0.5;
+  }
+
+  .pairing-card .pc-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 2px;
+  }
+
+  .pairing-card .pc-detail {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .pairing-card .pc-status {
+    font-size: 0.68rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pairing-card .pc-status.assigned {
+    color: var(--ork-green-l);
+  }
+
+  .pairing-card .pc-status.unassigned {
+    color: var(--text-dim);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.green { background: var(--ork-green-l); }
+  .status-dot.grey  { background: var(--text-dim); }
+
+  /* Transport sidebar cards */
+  .transport-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+
+  .transport-card .tc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .transport-card .tc-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  .transport-card .tc-cap {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .transport-card .tc-passenger {
+    font-size: 0.72rem;
+    color: var(--text);
+    padding: 3px 6px;
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 3px;
+    margin-bottom: 3px;
+  }
+
+  .transport-card .tc-empty {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .tc-mini-bar {
+    height: 4px;
+    background: var(--capacity-bg);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .tc-mini-fill {
+    height: 100%;
+    background: var(--ork-green);
+    border-radius: 2px;
+  }
+
+  /* ── Summary Footer in Sidebar ────────────────────────────────── */
+  .sidebar-summary {
+    margin-top: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+  }
+
+  .sidebar-summary .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    padding: 3px 0;
+  }
+
+  .sidebar-summary .summary-row .sr-label {
+    color: var(--text-dim);
+  }
+
+  .sidebar-summary .summary-row .sr-value {
+    color: var(--text-bright);
+    font-weight: 600;
+  }
+
+  .sidebar-summary .summary-row.total {
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 6px;
+  }
+
+  .sidebar-summary .summary-row.total .sr-value {
+    color: var(--ork-green-l);
+    font-size: 0.9rem;
+  }
+
+  /* ── Tooltips & Interactive ───────────────────────────────────── */
+  .interactive-hint {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 8px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  /* ── Responsive ───────────────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .sidebar {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ARMY HEADER
+     ════════════════════════════════════════════════════════════ -->
+<header class="army-header">
+  <div class="faction-icon">W</div>
+  <div class="army-title">
+    <h1>Tide of Muscle</h1>
+    <div class="army-meta"><span>Orks</span> &middot; War Horde &middot; Strike Force</div>
+  </div>
+  <div class="view-toggle">
+    <button>List</button>
+    <button class="active">Cards</button>
+    <button>Table</button>
+  </div>
+  <div class="pts-badge">2000 pts</div>
+</header>
+
+<div class="app-layout">
+
+<!-- ════════════════════════════════════════════════════════════════
+     MAIN CARD AREA
+     ════════════════════════════════════════════════════════════ -->
+<main class="card-area">
+
+  <!-- ── Characters ──────────────────────────────────────────── -->
+  <div class="role-group">
+    <div class="role-group-header">
+      <h2>Characters</h2>
+      <span class="role-count">2 units</span>
+    </div>
+    <div class="card-grid">
+
+      <!-- ─── Beastboss ──────────────────────────────────────── -->
+      <article class="unit-card">
+        <div class="card-head">
+          <div class="role-pip character"></div>
+          <div class="unit-name">Beastboss</div>
+          <span class="enhancement-tag">Kunnin' but Brutal</span>
+          <span class="role-badge character">Character</span>
+          <span class="pts">95 pts</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat"><div class="stat-label">M</div><div class="stat-val">6"</div></div>
+          <div class="stat"><div class="stat-label">T</div><div class="stat-val">5</div></div>
+          <div class="stat"><div class="stat-label">Sv</div><div class="stat-val">4+</div></div>
+          <div class="stat"><div class="stat-label">W</div><div class="stat-val">6</div></div>
+          <div class="stat"><div class="stat-label">Ld</div><div class="stat-val">6+</div></div>
+          <div class="stat"><div class="stat-label">OC</div><div class="stat-val">1</div></div>
+        </div>
+        <div class="card-body">
+          <div class="section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead>
+              <tr><th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Shoota</td>
+                <td>18"</td><td>2</td><td>5+</td><td>4</td><td>0</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Beast Snagga Klaw</td>
+                <td>Melee</td><td>4</td><td>3+</td><td>8</td><td>-2</td><td>2</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Beastchoppa</td>
+                <td>Melee</td><td>5</td><td>3+</td><td>6</td><td>-1</td><td>2</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="abilities-section">
+            <div class="section-label">Abilities</div>
+            <div class="ability-list">
+              <span class="ability-chip faction">Waaagh!</span>
+              <span class="ability-chip core">Leader</span>
+              <span class="ability-chip core">Feel No Pain 6+</span>
+              <span class="ability-chip">Beastboss</span>
+              <span class="ability-chip">Call of the Hunt</span>
+            </div>
+          </div>
+
+          <div class="keywords-row">
+            <span class="kw-tag">Infantry</span>
+            <span class="kw-tag">Character</span>
+            <span class="kw-tag">Beast Snagga</span>
+            <span class="kw-tag">Beastboss</span>
+          </div>
+
+          <!-- Leader attachment -->
+          <div class="leader-section">
+            <div class="section-label">Leads</div>
+            <div class="leader-assigned">
+              <span class="status-dot green"></span>
+              <span class="assigned-name">Beast Snagga Boyz</span>
+              <span style="font-size:0.65rem;color:var(--text-dim);">(10 models)</span>
+              <button class="unassign-btn" title="Unassign">&times;</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── Ghazghkull Thraka ──────────────────────────────── -->
+      <article class="unit-card is-warlord">
+        <div class="card-head">
+          <div class="role-pip character"></div>
+          <div class="unit-name">
+            Ghazghkull Thraka
+            <span class="sub-model">Includes: Makari</span>
+          </div>
+          <span class="warlord-crown">Warlord</span>
+          <span class="role-badge character">Character</span>
+          <span class="pts">235 pts</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat"><div class="stat-label">M</div><div class="stat-val">7"</div></div>
+          <div class="stat"><div class="stat-label">T</div><div class="stat-val">11</div></div>
+          <div class="stat"><div class="stat-label">Sv</div><div class="stat-val">2+</div></div>
+          <div class="stat"><div class="stat-label">W</div><div class="stat-val">12</div></div>
+          <div class="stat"><div class="stat-label">Ld</div><div class="stat-val">6+</div></div>
+          <div class="stat"><div class="stat-label">OC</div><div class="stat-val">4</div></div>
+        </div>
+        <div class="card-body">
+          <div class="section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead>
+              <tr><th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Mork's Roar</td>
+                <td>36"</td><td>8</td><td>5+</td><td>5</td><td>-1</td><td>2</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Gork's Klaw</td>
+                <td>Melee</td><td>6</td><td>2+</td><td>14</td><td>-3</td><td>3</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="abilities-section">
+            <div class="section-label">Abilities</div>
+            <div class="ability-list">
+              <span class="ability-chip faction">Waaagh!</span>
+              <span class="ability-chip core">Deadly Demise D3</span>
+              <span class="ability-chip core">Leader</span>
+              <span class="ability-chip">Prophet of the Waaagh!</span>
+              <span class="ability-chip">Ghazghkull's Waaagh!</span>
+              <span class="ability-chip">Makari's Lucky Banner</span>
+            </div>
+          </div>
+
+          <div class="keywords-row">
+            <span class="kw-tag">Monster</span>
+            <span class="kw-tag">Character</span>
+            <span class="kw-tag">Epic Hero</span>
+            <span class="kw-tag">Ghazghkull Thraka</span>
+          </div>
+
+          <!-- Leader attachment -->
+          <div class="leader-section">
+            <div class="section-label">Leads</div>
+            <select class="leader-dropdown">
+              <option value="">-- Assign to unit --</option>
+              <option value="boyz">Boyz (10 models)</option>
+              <option value="bsb">Beast Snagga Boyz (10 models)</option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ── Battleline ──────────────────────────────────────────── -->
+  <div class="role-group">
+    <div class="role-group-header">
+      <h2>Battleline</h2>
+      <span class="role-count">2 units</span>
+    </div>
+    <div class="card-grid">
+
+      <!-- ─── Beast Snagga Boyz ──────────────────────────────── -->
+      <article class="unit-card">
+        <div class="card-head">
+          <div class="role-pip battleline"></div>
+          <div class="unit-name">Beast Snagga Boyz</div>
+          <span class="role-badge battleline">Battleline</span>
+          <span class="pts">95 pts</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat"><div class="stat-label">M</div><div class="stat-val">6"</div></div>
+          <div class="stat"><div class="stat-label">T</div><div class="stat-val">5</div></div>
+          <div class="stat"><div class="stat-label">Sv</div><div class="stat-val">5+</div></div>
+          <div class="stat"><div class="stat-label">W</div><div class="stat-val">1</div></div>
+          <div class="stat"><div class="stat-label">Ld</div><div class="stat-val">7+</div></div>
+          <div class="stat"><div class="stat-label">OC</div><div class="stat-val">2</div></div>
+        </div>
+        <div class="card-body">
+          <div class="composition">
+            <strong>Composition:</strong> 9x Beast Snagga Boy, 1x Beast Snagga Nob
+          </div>
+
+          <div class="section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead>
+              <tr><th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Slugga</td>
+                <td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Choppa</td>
+                <td>Melee</td><td>3</td><td>3+</td><td>5</td><td>-1</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Power Snappa <span class="weapon-keyword">[Nob]</span></td>
+                <td>Melee</td><td>3</td><td>3+</td><td>7</td><td>-1</td><td>2</td>
+              </tr>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Thump Gun</td>
+                <td>18"</td><td>1</td><td>5+</td><td>6</td><td>-1</td><td>2</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="abilities-section">
+            <div class="section-label">Abilities</div>
+            <div class="ability-list">
+              <span class="ability-chip faction">Waaagh!</span>
+              <span class="ability-chip core">Feel No Pain 6+</span>
+              <span class="ability-chip">Beast Snagga Rage</span>
+            </div>
+          </div>
+
+          <div class="keywords-row">
+            <span class="kw-tag">Infantry</span>
+            <span class="kw-tag">Battleline</span>
+            <span class="kw-tag">Beast Snagga</span>
+            <span class="kw-tag">Mob</span>
+            <span class="kw-tag">Beast Snagga Boyz</span>
+          </div>
+
+          <div class="leader-section">
+            <div class="section-label">Led by</div>
+            <div class="leader-assigned">
+              <span class="status-dot green"></span>
+              <span class="assigned-name">Beastboss</span>
+              <span style="font-size:0.65rem;color:var(--text-dim);">(95 pts)</span>
+              <button class="unassign-btn" title="Unassign">&times;</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── Boyz ───────────────────────────────────────────── -->
+      <article class="unit-card">
+        <div class="card-head">
+          <div class="role-pip battleline"></div>
+          <div class="unit-name">Boyz</div>
+          <span class="role-badge battleline">Battleline</span>
+          <span class="pts">80 pts</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat"><div class="stat-label">M</div><div class="stat-val">6"</div></div>
+          <div class="stat"><div class="stat-label">T</div><div class="stat-val">5</div></div>
+          <div class="stat"><div class="stat-label">Sv</div><div class="stat-val">5+</div></div>
+          <div class="stat"><div class="stat-label">W</div><div class="stat-val">1</div></div>
+          <div class="stat"><div class="stat-label">Ld</div><div class="stat-val">7+</div></div>
+          <div class="stat"><div class="stat-label">OC</div><div class="stat-val">2</div></div>
+        </div>
+        <div class="card-body">
+          <div class="composition">
+            <strong>Composition:</strong> 9x Boy, 1x Boss Nob
+          </div>
+
+          <div class="section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead>
+              <tr><th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Slugga</td>
+                <td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Choppa</td>
+                <td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Big Choppa <span class="weapon-keyword">[Nob]</span></td>
+                <td>Melee</td><td>3</td><td>3+</td><td>7</td><td>-1</td><td>2</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="abilities-section">
+            <div class="section-label">Abilities</div>
+            <div class="ability-list">
+              <span class="ability-chip faction">Waaagh!</span>
+              <span class="ability-chip">Mob Rule</span>
+            </div>
+          </div>
+
+          <div class="keywords-row">
+            <span class="kw-tag">Infantry</span>
+            <span class="kw-tag">Battleline</span>
+            <span class="kw-tag">Mob</span>
+            <span class="kw-tag">Boyz</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ── Transports ──────────────────────────────────────────── -->
+  <div class="role-group">
+    <div class="role-group-header">
+      <h2>Transports</h2>
+      <span class="role-count">2 units</span>
+    </div>
+    <div class="card-grid">
+
+      <!-- ─── Trukk ──────────────────────────────────────────── -->
+      <article class="unit-card">
+        <div class="card-head">
+          <div class="role-pip transport"></div>
+          <div class="unit-name">Trukk</div>
+          <span class="role-badge transport">Dedicated Transport</span>
+          <span class="pts">70 pts</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat"><div class="stat-label">M</div><div class="stat-val">12"</div></div>
+          <div class="stat"><div class="stat-label">T</div><div class="stat-val">7</div></div>
+          <div class="stat"><div class="stat-label">Sv</div><div class="stat-val">4+</div></div>
+          <div class="stat"><div class="stat-label">W</div><div class="stat-val">10</div></div>
+          <div class="stat"><div class="stat-label">Ld</div><div class="stat-val">7+</div></div>
+          <div class="stat"><div class="stat-label">OC</div><div class="stat-val">2</div></div>
+        </div>
+        <div class="card-body">
+          <div class="section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead>
+              <tr><th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Big Shoota</td>
+                <td>36"</td><td>3</td><td>5+</td><td>5</td><td>0</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Spiked Ram</td>
+                <td>Melee</td><td>3</td><td>4+</td><td>8</td><td>0</td><td>1</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="abilities-section">
+            <div class="section-label">Abilities</div>
+            <div class="ability-list">
+              <span class="ability-chip faction">Waaagh!</span>
+              <span class="ability-chip core">Deadly Demise D3</span>
+              <span class="ability-chip core">Firing Deck 12</span>
+              <span class="ability-chip">Ramshackle</span>
+            </div>
+          </div>
+
+          <div class="keywords-row">
+            <span class="kw-tag">Vehicle</span>
+            <span class="kw-tag">Transport</span>
+            <span class="kw-tag">Dedicated Transport</span>
+            <span class="kw-tag">Trukk</span>
+          </div>
+
+          <!-- Transport carrying area -->
+          <div class="transport-section">
+            <div class="section-label">Carrying (Capacity: 12)</div>
+            <div class="capacity-bar">
+              <div class="capacity-track"><div class="capacity-fill" style="width:83%"></div></div>
+              <div class="capacity-label">10 / 12</div>
+            </div>
+            <div class="transport-slots">
+              <div class="transport-unit">
+                <span class="tu-name">Boyz</span>
+                <span class="tu-size">10 models</span>
+                <button class="tu-remove" title="Remove">&times;</button>
+              </div>
+              <div class="transport-drop-zone">+ Assign unit (2 slots remaining)</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── Battlewagon ────────────────────────────────────── -->
+      <article class="unit-card">
+        <div class="card-head">
+          <div class="role-pip transport"></div>
+          <div class="unit-name">
+            Battlewagon
+            <span class="sub-model">'Ard Case</span>
+          </div>
+          <span class="role-badge transport">Transport</span>
+          <span class="pts">160 pts</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat"><div class="stat-label">M</div><div class="stat-val">10"</div></div>
+          <div class="stat"><div class="stat-label">T</div><div class="stat-val">10</div></div>
+          <div class="stat"><div class="stat-label">Sv</div><div class="stat-val">3+</div></div>
+          <div class="stat"><div class="stat-label">W</div><div class="stat-val">16</div></div>
+          <div class="stat"><div class="stat-label">Ld</div><div class="stat-val">7+</div></div>
+          <div class="stat"><div class="stat-label">OC</div><div class="stat-val">3</div></div>
+        </div>
+        <div class="card-body">
+          <div class="section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead>
+              <tr><th>Name</th><th>Range</th><th>A</th><th>BS/WS</th><th>S</th><th>AP</th><th>D</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Kannon (Frag)</td>
+                <td>36"</td><td>D6</td><td>5+</td><td>5</td><td>0</td><td>1</td>
+              </tr>
+              <tr>
+                <td><span class="ranged-icon">&ofcir;</span> Kannon (Shell)</td>
+                <td>36"</td><td>1</td><td>5+</td><td>9</td><td>-2</td><td>D3</td>
+              </tr>
+              <tr>
+                <td><span class="melee-icon">&xcup;</span> Deff Rolla</td>
+                <td>Melee</td><td>6</td><td>3+</td><td>9</td><td>-1</td><td>2</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="abilities-section">
+            <div class="section-label">Abilities</div>
+            <div class="ability-list">
+              <span class="ability-chip faction">Waaagh!</span>
+              <span class="ability-chip core">Deadly Demise D6</span>
+              <span class="ability-chip">'Ard Case</span>
+              <span class="ability-chip">Ramshackle</span>
+              <span class="ability-chip">Mobile Fortress</span>
+            </div>
+          </div>
+
+          <div class="keywords-row">
+            <span class="kw-tag">Vehicle</span>
+            <span class="kw-tag">Transport</span>
+            <span class="kw-tag">Battlewagon</span>
+          </div>
+
+          <!-- Transport carrying area -->
+          <div class="transport-section">
+            <div class="section-label">Carrying (Capacity: 20)</div>
+            <div class="capacity-bar">
+              <div class="capacity-track"><div class="capacity-fill" style="width:0%"></div></div>
+              <div class="capacity-label">0 / 20</div>
+            </div>
+            <div class="transport-slots">
+              <div class="transport-drop-zone">+ Assign unit (20 slots remaining)</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SIDEBAR
+     ════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <!-- Character Pairings -->
+  <div class="sidebar-section">
+    <h3><span class="s-icon" style="color:var(--role-char)">&#9670;</span> Character Pairings</h3>
+
+    <div class="pairing-card" draggable="true">
+      <div class="pc-name">Beastboss</div>
+      <div class="pc-detail">95 pts &middot; Enhancement: Kunnin' but Brutal</div>
+      <div class="pc-status assigned">
+        <span class="status-dot green"></span>
+        Leading: Beast Snagga Boyz
+      </div>
+    </div>
+
+    <div class="pairing-card" draggable="true">
+      <div class="pc-name">Ghazghkull Thraka</div>
+      <div class="pc-detail">235 pts &middot; Warlord &middot; Epic Hero</div>
+      <div class="pc-status unassigned">
+        <span class="status-dot grey"></span>
+        Unassigned
+      </div>
+    </div>
+
+    <div class="interactive-hint">
+      Drag a character onto a unit card or use the dropdown on the card to assign leadership.
+    </div>
+  </div>
+
+  <!-- Transport Allocation -->
+  <div class="sidebar-section">
+    <h3><span class="s-icon" style="color:var(--role-trans)">&#9632;</span> Transport Allocation</h3>
+
+    <div class="transport-card">
+      <div class="tc-header">
+        <span class="tc-name">Trukk</span>
+        <span class="tc-cap">10 / 12</span>
+      </div>
+      <div class="tc-passenger">Boyz (10 models)</div>
+      <div class="tc-mini-bar"><div class="tc-mini-fill" style="width:83%"></div></div>
+    </div>
+
+    <div class="transport-card">
+      <div class="tc-header">
+        <span class="tc-name">Battlewagon</span>
+        <span class="tc-cap">0 / 20</span>
+      </div>
+      <div class="tc-empty">No units assigned</div>
+      <div class="tc-mini-bar"><div class="tc-mini-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="interactive-hint">
+      Click "+ Assign unit" on a transport card or drag units from the list to assign them.
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="sidebar-summary">
+    <div class="summary-row">
+      <span class="sr-label">Characters</span>
+      <span class="sr-value">330 pts</span>
+    </div>
+    <div class="summary-row">
+      <span class="sr-label">Battleline</span>
+      <span class="sr-value">175 pts</span>
+    </div>
+    <div class="summary-row">
+      <span class="sr-label">Transports</span>
+      <span class="sr-value">230 pts</span>
+    </div>
+    <div class="summary-row total">
+      <span class="sr-label">Shown</span>
+      <span class="sr-value">735 / 2000 pts</span>
+    </div>
+  </div>
+
+</aside>
+
+</div><!-- /app-layout -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     MINIMAL JS FOR INTERACTIVITY
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  // ── View toggle buttons (cosmetic) ────────────────────────────
+  document.querySelectorAll('.view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // ── Unassign buttons ──────────────────────────────────────────
+  document.querySelectorAll('.unassign-btn, .tu-remove').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const parent = this.closest('.leader-assigned, .transport-unit');
+      if (parent) {
+        parent.style.transition = 'opacity 0.2s, max-height 0.3s';
+        parent.style.opacity = '0';
+        parent.style.maxHeight = '0';
+        parent.style.overflow = 'hidden';
+        parent.style.marginTop = '0';
+        parent.style.marginBottom = '0';
+        parent.style.paddingTop = '0';
+        parent.style.paddingBottom = '0';
+        setTimeout(() => parent.remove(), 300);
+      }
+    });
+  });
+
+  // ── Dropdown assignment demo ──────────────────────────────────
+  document.querySelectorAll('.leader-dropdown').forEach(sel => {
+    sel.addEventListener('change', function() {
+      if (!this.value) return;
+      const text = this.options[this.selectedIndex].text;
+      const container = this.parentElement;
+      const assigned = document.createElement('div');
+      assigned.className = 'leader-assigned';
+      assigned.innerHTML = `
+        <span class="status-dot green"></span>
+        <span class="assigned-name">${text}</span>
+        <button class="unassign-btn" title="Unassign">&times;</button>
+      `;
+      assigned.querySelector('.unassign-btn').addEventListener('click', function() {
+        assigned.remove();
+        sel.style.display = '';
+        sel.value = '';
+      });
+      container.insertBefore(assigned, this);
+      this.style.display = 'none';
+    });
+  });
+
+  // ── Card hover tilt (subtle) ──────────────────────────────────
+  document.querySelectorAll('.unit-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+      this.style.transition = 'transform 0.2s, border-color 0.2s, box-shadow 0.2s';
+    });
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+    });
+  });
+
+  // ── Transport drop zone click demo ────────────────────────────
+  document.querySelectorAll('.transport-drop-zone').forEach(zone => {
+    zone.addEventListener('click', function() {
+      const units = ['Beast Snagga Boyz (10)', 'Boyz (10)', 'Beastboss (1)', 'Ghazghkull Thraka (1)'];
+      const pick = units[Math.floor(Math.random() * units.length)];
+      const slot = document.createElement('div');
+      slot.className = 'transport-unit';
+      slot.innerHTML = `
+        <span class="tu-name">${pick.split(' (')[0]}</span>
+        <span class="tu-size">${pick.match(/\(.*\)/)[0].replace(/[()]/g,'')} models</span>
+        <button class="tu-remove" title="Remove">&times;</button>
+      `;
+      slot.querySelector('.tu-remove').addEventListener('click', function() {
+        slot.remove();
+      });
+      this.parentElement.insertBefore(slot, this);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

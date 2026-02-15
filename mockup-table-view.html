@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table View Mockup - Orks Army List</title>
+<style>
+  :root {
+    --bg-dark: #1a1a1e;
+    --bg-row: #222228;
+    --bg-row-alt: #272730;
+    --bg-sub: #1e1e24;
+    --bg-header: #16161a;
+    --bg-section: #2a2a32;
+    --border: #3a3a44;
+    --border-light: #4a4a54;
+    --text: #d4d4d8;
+    --text-dim: #8888a0;
+    --text-bright: #ececf0;
+    --ork-green: #5B8C2A;
+    --ork-green-dim: #3d5e1c;
+    --ork-green-bright: #7ab838;
+    --accent-gold: #c8a84e;
+    --accent-red: #c04040;
+    --accent-blue: #4488bb;
+    --weapon-bg: #1c1c22;
+    --ability-bg: #1a1e1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-dark);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.3;
+    padding: 12px;
+    min-width: 1200px;
+  }
+
+  /* ── Army Header ── */
+  .army-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, var(--ork-green-dim) 0%, var(--bg-dark) 60%);
+    border: 1px solid var(--ork-green);
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .army-header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ork-green-bright);
+    letter-spacing: 0.5px;
+  }
+  .army-header .faction {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .army-header .pts {
+    font-size: 14px;
+    color: var(--accent-gold);
+    font-weight: 600;
+    margin-left: auto;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .toolbar button {
+    background: var(--bg-section);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .toolbar button:hover { border-color: var(--ork-green); color: var(--ork-green-bright); }
+  .toolbar .spacer { flex: 1; }
+  .toolbar .legend {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .toolbar .legend span { margin-left: 10px; }
+  .toolbar .legend .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 3px;
+    vertical-align: middle;
+  }
+  .dot.char { background: var(--accent-gold); }
+  .dot.battle { background: var(--ork-green); }
+  .dot.trans { background: var(--accent-blue); }
+  .dot.other { background: var(--text-dim); }
+
+  /* ── Main Table ── */
+  .army-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    table-layout: fixed;
+  }
+
+  .army-table th {
+    background: var(--bg-header);
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 6px 6px;
+    text-align: center;
+    border-bottom: 2px solid var(--ork-green-dim);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .army-table th:first-child { text-align: left; padding-left: 10px; }
+  .army-table th.col-name { text-align: left; }
+
+  /* Column widths */
+  .col-expand  { width: 26px; }
+  .col-role    { width: 68px; }
+  .col-name    { width: 200px; }
+  .col-models  { width: 52px; }
+  .col-pts     { width: 48px; }
+  .col-stat    { width: 36px; }
+  .col-enh     { width: 130px; }
+  .col-pair    { width: 160px; }
+  .col-xport   { width: 170px; }
+
+  /* ── Unit Rows ── */
+  .army-table td {
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid #2e2e36;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .army-table td:last-child { border-right: none; }
+
+  tr.unit-row { background: var(--bg-row); cursor: default; }
+  tr.unit-row:nth-child(odd) { background: var(--bg-row-alt); }
+  tr.unit-row:hover { background: #2d2d38; }
+  tr.unit-row.warlord { border-left: 3px solid var(--accent-gold); }
+
+  /* Section header rows */
+  tr.section-header td {
+    background: var(--bg-section);
+    color: var(--ork-green-bright);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 5px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--ork-green-dim);
+  }
+
+  /* Expand button */
+  .expand-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 20px; height: 20px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+    padding: 0;
+    font-family: 'Consolas', monospace;
+    transition: all 0.1s;
+  }
+  .expand-btn:hover { border-color: var(--ork-green); color: var(--ork-green-bright); }
+  .expand-btn.open { color: var(--ork-green-bright); border-color: var(--ork-green); background: var(--ork-green-dim); }
+
+  /* Cell styling */
+  .cell-name {
+    text-align: left !important;
+    font-weight: 600;
+    color: var(--text-bright);
+    padding-left: 8px !important;
+  }
+  .cell-role {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: left !important;
+    padding-left: 10px !important;
+  }
+  .cell-pts {
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+  .cell-stat {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .warlord-badge {
+    display: inline-block;
+    font-size: 8px;
+    background: var(--accent-gold);
+    color: #000;
+    padding: 0px 4px;
+    border-radius: 2px;
+    margin-left: 4px;
+    font-weight: 700;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  }
+  .char-badge {
+    display: inline-block;
+    font-size: 8px;
+    background: #555;
+    color: #ddd;
+    padding: 0px 3px;
+    border-radius: 2px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .cell-enh {
+    font-size: 11px;
+    color: #c090e0;
+    text-align: left !important;
+    padding-left: 6px !important;
+  }
+
+  /* ── Dropdowns ── */
+  .pair-select, .xport-select {
+    background: var(--bg-dark);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-family: inherit;
+    width: 100%;
+    cursor: pointer;
+    appearance: auto;
+  }
+  .pair-select:hover, .xport-select:hover { border-color: var(--ork-green); }
+  .pair-select:focus, .xport-select:focus { outline: 1px solid var(--ork-green); border-color: var(--ork-green); }
+  .pair-select option, .xport-select option {
+    background: var(--bg-dark);
+    color: var(--text);
+  }
+
+  /* ── Sub-rows: Weapons ── */
+  tr.sub-row { display: none; }
+  tr.sub-row.visible { display: table-row; }
+
+  tr.sub-row td {
+    background: var(--weapon-bg);
+    padding: 0;
+    border-bottom: 1px solid #2a2a30;
+  }
+
+  .sub-content {
+    padding: 4px 8px 6px 34px;
+  }
+
+  .sub-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ork-green);
+    font-weight: 600;
+    margin-bottom: 3px;
+    margin-top: 4px;
+  }
+
+  /* Weapons sub-table */
+  .weapons-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2px;
+    table-layout: fixed;
+  }
+  .weapons-table th {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 4px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    position: static;
+  }
+  .weapons-table th:first-child { text-align: left; }
+  .weapons-table td {
+    font-size: 12px;
+    padding: 2px 4px;
+    text-align: center;
+    border-bottom: 1px solid #262630;
+    border-right: none;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .weapons-table td:first-child {
+    text-align: left;
+    color: var(--text-bright);
+    font-weight: 500;
+  }
+  .weapons-table tr:last-child td { border-bottom: none; }
+  .weapons-table .melee { color: var(--accent-red); }
+  .weapons-table .ranged { color: var(--accent-blue); }
+  .wep-kw {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* Column widths for weapons table */
+  .wt-name  { width: 200px; }
+  .wt-range { width: 60px; }
+  .wt-a     { width: 40px; }
+  .wt-skill { width: 50px; }
+  .wt-s     { width: 40px; }
+  .wt-ap    { width: 40px; }
+  .wt-d     { width: 40px; }
+  .wt-kw    { width: auto; }
+
+  /* Abilities list */
+  .abilities-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 2px 0 4px;
+  }
+  .ability-tag {
+    font-size: 11px;
+    color: var(--text);
+    background: #2a2e2a;
+    border: 1px solid #3a4a3a;
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+  .ability-tag.core {
+    color: var(--ork-green-bright);
+    border-color: var(--ork-green-dim);
+  }
+  .ability-tag.faction {
+    color: var(--accent-gold);
+    border-color: #5a4a2a;
+    background: #2a2820;
+  }
+  .ability-tag.invuln {
+    color: #e060e0;
+    border-color: #5a3a5a;
+    background: #2a1e2a;
+  }
+
+  /* ── Summary Row ── */
+  tr.summary-row td {
+    background: var(--bg-header);
+    border-top: 2px solid var(--ork-green);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 8px 6px;
+    color: var(--text-bright);
+  }
+  .summary-label {
+    text-align: left !important;
+    padding-left: 10px !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 11px;
+    color: var(--ork-green-bright);
+  }
+  .summary-pts {
+    color: var(--accent-gold) !important;
+    font-size: 14px !important;
+  }
+
+  /* ── Validation / capacity ── */
+  .capacity-info {
+    font-size: 10px;
+    color: var(--text-dim);
+    display: block;
+    margin-top: 1px;
+  }
+  .capacity-warn { color: var(--accent-red); }
+
+  /* ── Scrollable wrapper ── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .army-table { border: none; }
+
+  /* ── Role color pips ── */
+  .role-pip {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .role-pip.character { background: var(--accent-gold); }
+  .role-pip.battleline { background: var(--ork-green); }
+  .role-pip.transport { background: var(--accent-blue); }
+  .role-pip.other { background: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<!-- Army Header -->
+<div class="army-header">
+  <h1>Tide of Muscle</h1>
+  <span class="faction">Orks &mdash; War Horde</span>
+  <span class="pts">2000 pts</span>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button onclick="expandAll()">Expand All</button>
+  <button onclick="collapseAll()">Collapse All</button>
+  <button onclick="expandSection('weapons')">Show Weapons</button>
+  <button onclick="expandSection('abilities')">Show Abilities</button>
+  <span class="spacer"></span>
+  <span class="legend">
+    <span><span class="dot char"></span>Character</span>
+    <span><span class="dot battle"></span>Battleline</span>
+    <span><span class="dot trans"></span>Transport</span>
+    <span><span class="dot other"></span>Other</span>
+  </span>
+</div>
+
+<!-- Main Table -->
+<div class="table-wrap">
+<table class="army-table" id="armyTable">
+  <thead>
+    <tr>
+      <th class="col-expand"></th>
+      <th class="col-role">Role</th>
+      <th class="col-name">Unit Name</th>
+      <th class="col-models">Models</th>
+      <th class="col-pts">Pts</th>
+      <th class="col-stat">M</th>
+      <th class="col-stat">T</th>
+      <th class="col-stat">Sv</th>
+      <th class="col-stat">W</th>
+      <th class="col-stat">Ld</th>
+      <th class="col-stat">OC</th>
+      <th class="col-enh">Enhancement</th>
+      <th class="col-pair">Paired Character</th>
+      <th class="col-xport">Transport</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ═══════ CHARACTERS ═══════ -->
+    <tr class="section-header"><td colspan="14">Characters</td></tr>
+
+    <!-- Beastboss -->
+    <tr class="unit-row" data-unit="beastboss">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip character"></span>Character</td>
+      <td class="cell-name">Beastboss</td>
+      <td>1</td>
+      <td class="cell-pts">95</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">6</td>
+      <td class="cell-stat">6+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">Kunnin' but Brutal</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="">&mdash; join unit &mdash;</option>
+          <option value="bsb" selected>Beast Snagga Boyz</option>
+          <option value="boyz1">Boyz #1</option>
+          <option value="boyz2">Boyz #2</option>
+          <option value="boyz3">Boyz #3</option>
+          <option value="nobz">Nobz</option>
+          <option value="stormboyz">Stormboyz</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="beastboss">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Shoota</span></td><td>18"</td><td>4</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Rapid Fire 1</td></tr>
+              <tr><td><span class="melee">Beast Snagga klaw</span></td><td>Melee</td><td>4</td><td>3+</td><td>10</td><td>-2</td><td>2</td><td class="wep-kw">Anti-Monster 4+, Anti-Vehicle 4+</td></tr>
+              <tr><td><span class="melee">Beastchoppa</span></td><td>Melee</td><td>6</td><td>2+</td><td>6</td><td>-1</td><td>2</td><td class="wep-kw">Anti-Monster 4+, Anti-Vehicle 4+</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Leader</span>
+            <span class="ability-tag core">Feel No Pain 5+</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Beastboss: +1 to hit (melee) for led unit vs Monster/Vehicle</span>
+            <span class="ability-tag invuln">Invuln 5+</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Ghazghkull Thraka -->
+    <tr class="unit-row warlord" data-unit="ghaz">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip character"></span>Character</td>
+      <td class="cell-name">Ghazghkull Thraka <span class="warlord-badge">WARLORD</span><span class="char-badge">+Makari</span></td>
+      <td>2</td>
+      <td class="cell-pts">235</td>
+      <td class="cell-stat">7"</td>
+      <td class="cell-stat">7</td>
+      <td class="cell-stat">2+</td>
+      <td class="cell-stat">10</td>
+      <td class="cell-stat">6+</td>
+      <td class="cell-stat">4</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="">&mdash; join unit &mdash;</option>
+          <option value="boyz1">Boyz #1</option>
+          <option value="boyz2">Boyz #2</option>
+          <option value="boyz3">Boyz #3</option>
+          <option value="nobz" selected>Nobz</option>
+          <option value="flashgitz1">Flash Gitz #1</option>
+          <option value="flashgitz2">Flash Gitz #2</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+          <option value="bw1">Battlewagon #1 (10 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="ghaz">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Mork's Roar</span></td><td>36"</td><td>6</td><td>5+</td><td>6</td><td>-1</td><td>2</td><td class="wep-kw">Anti-Infantry 4+</td></tr>
+              <tr><td><span class="melee">Gork's Klaw</span></td><td>Melee</td><td>6</td><td>2+</td><td>12</td><td>-3</td><td>D6+1</td><td class="wep-kw">Devastating Wounds</td></tr>
+              <tr><td><span class="melee">Makari's Stabba</span></td><td>Melee</td><td>1</td><td>5+</td><td>2</td><td>0</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Leader</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">The Prophet of Gork and Mork: FNP 4+ (limited to 2 wounds lost per phase)</span>
+            <span class="ability-tag">Makari: 2+ Look Out, Sir</span>
+            <span class="ability-tag invuln">Invuln 4+</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Warboss #1 -->
+    <tr class="unit-row" data-unit="warboss1">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip character"></span>Character</td>
+      <td class="cell-name">Warboss #1</td>
+      <td>1</td>
+      <td class="cell-pts">75</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">6</td>
+      <td class="cell-stat">6+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="">&mdash; join unit &mdash;</option>
+          <option value="boyz1" selected>Boyz #1</option>
+          <option value="boyz2">Boyz #2</option>
+          <option value="boyz3">Boyz #3</option>
+          <option value="nobz">Nobz</option>
+          <option value="flashgitz1">Flash Gitz #1</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="warboss1">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Kombi-weapon</span></td><td>24"</td><td>1</td><td>4+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Anti-Infantry 4+, Rapid Fire 1</td></tr>
+              <tr><td><span class="ranged">Twin sluggas</span></td><td>12"</td><td>2</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Twin-linked</td></tr>
+              <tr><td><span class="melee">Power klaw</span></td><td>Melee</td><td>4</td><td>3+</td><td>10</td><td>-2</td><td>2</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Leader</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Da Boss iz Watchin': re-roll Advance and Charge for led unit</span>
+            <span class="ability-tag invuln">Invuln 5+</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Warboss #2 -->
+    <tr class="unit-row" data-unit="warboss2">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip character"></span>Character</td>
+      <td class="cell-name">Warboss #2</td>
+      <td>1</td>
+      <td class="cell-pts">75</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">6</td>
+      <td class="cell-stat">6+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="">&mdash; join unit &mdash;</option>
+          <option value="boyz1">Boyz #1</option>
+          <option value="boyz2" selected>Boyz #2</option>
+          <option value="boyz3">Boyz #3</option>
+          <option value="nobz">Nobz</option>
+          <option value="flashgitz2">Flash Gitz #2</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="warboss2">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Kombi-weapon</span></td><td>24"</td><td>1</td><td>4+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Anti-Infantry 4+, Rapid Fire 1</td></tr>
+              <tr><td><span class="ranged">Twin sluggas</span></td><td>12"</td><td>2</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Twin-linked</td></tr>
+              <tr><td><span class="melee">Power klaw</span></td><td>Melee</td><td>4</td><td>3+</td><td>10</td><td>-2</td><td>2</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Leader</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Da Boss iz Watchin': re-roll Advance and Charge for led unit</span>
+            <span class="ability-tag invuln">Invuln 5+</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Zodgrod Wortsnagga -->
+    <tr class="unit-row" data-unit="zodgrod">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip character"></span>Character</td>
+      <td class="cell-name">Zodgrod Wortsnagga</td>
+      <td>1</td>
+      <td class="cell-pts">90</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="">&mdash; join unit &mdash;</option>
+          <option value="gretchin1" selected>Gretchin (20)</option>
+          <option value="gretchin2">Gretchin (10)</option>
+          <option value="boyz1">Boyz #1</option>
+          <option value="boyz2">Boyz #2</option>
+          <option value="boyz3">Boyz #3</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="zodgrod">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="melee">Da Grabzappa</span></td><td>Melee</td><td>5</td><td>3+</td><td>6</td><td>-1</td><td>2</td><td class="wep-kw">Lethal Hits</td></tr>
+              <tr><td><span class="ranged">Squigstoppa</span></td><td>12"</td><td>D6</td><td>5+</td><td>5</td><td>0</td><td>1</td><td class="wep-kw">Torrent</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Leader</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Super Runts: +1 to wound (melee) for led Gretchin unit</span>
+            <span class="ability-tag invuln">Invuln 6+</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ═══════ BATTLELINE ═══════ -->
+    <tr class="section-header"><td colspan="14">Battleline</td></tr>
+
+    <!-- Beast Snagga Boyz -->
+    <tr class="unit-row" data-unit="bsb">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip battleline"></span>Battleline</td>
+      <td class="cell-name">Beast Snagga Boyz</td>
+      <td>10</td>
+      <td class="cell-pts">95</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select">
+          <option value="beastboss">Beastboss</option>
+        </select>
+        <span class="capacity-info">Paired</span>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="bsb">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons (9x Boy)</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>5</td><td>-1</td><td>1</td><td class="wep-kw">Anti-Monster 4+, Anti-Vehicle 4+</td></tr>
+              <tr><td colspan="8" style="color:var(--text-dim);font-size:11px;text-align:left;">Nob: Power Snappa &mdash; Melee | A:3 | WS:3+ | S:7 | AP:-1 | D:2</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Beast Snagga Toughness: +1T when targeted by ranged attacks</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Boyz #1 -->
+    <tr class="unit-row" data-unit="boyz1">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip battleline"></span>Battleline</td>
+      <td class="cell-name">Boyz #1</td>
+      <td>10</td>
+      <td class="cell-pts">80</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select">
+          <option value="warboss1">Warboss #1</option>
+        </select>
+        <span class="capacity-info">Paired</span>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+          <option value="trukk1" selected>Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+        <span class="capacity-info">11/12 used</span>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="boyz1">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons (9x Boy)</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td colspan="8" style="color:var(--text-dim);font-size:11px;text-align:left;">Boss Nob: Big Choppa &mdash; Melee | A:3 | WS:3+ | S:7 | AP:-1 | D:2</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">'Ere We Go: re-roll Charge tests</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Boyz #2 -->
+    <tr class="unit-row" data-unit="boyz2">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip battleline"></span>Battleline</td>
+      <td class="cell-name">Boyz #2</td>
+      <td>10</td>
+      <td class="cell-pts">80</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select">
+          <option value="warboss2">Warboss #2</option>
+        </select>
+        <span class="capacity-info">Paired</span>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2" selected>Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+        <span class="capacity-info">11/12 used</span>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="boyz2">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons (9x Boy)</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td colspan="8" style="color:var(--text-dim);font-size:11px;text-align:left;">Boss Nob: Big Choppa &mdash; Melee | A:3 | WS:3+ | S:7 | AP:-1 | D:2</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">'Ere We Go: re-roll Charge tests</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Boyz #3 -->
+    <tr class="unit-row" data-unit="boyz3">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip battleline"></span>Battleline</td>
+      <td class="cell-name">Boyz #3</td>
+      <td>10</td>
+      <td class="cell-pts">80</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+          <option value="warboss1">Warboss #1</option>
+          <option value="warboss2">Warboss #2</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="boyz3">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons (9x Boy)</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td colspan="8" style="color:var(--text-dim);font-size:11px;text-align:left;">Boss Nob: Big Choppa &mdash; Melee | A:3 | WS:3+ | S:7 | AP:-1 | D:2</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">'Ere We Go: re-roll Charge tests</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ═══════ TRANSPORTS ═══════ -->
+    <tr class="section-header"><td colspan="14">Dedicated Transports</td></tr>
+
+    <!-- Trukk #1 -->
+    <tr class="unit-row" data-unit="trukk1">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip transport"></span>Transport</td>
+      <td class="cell-name">Trukk #1</td>
+      <td>1</td>
+      <td class="cell-pts">70</td>
+      <td class="cell-stat">12"</td>
+      <td class="cell-stat">7</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">10</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>&mdash;</td>
+      <td>
+        <span class="capacity-info">Capacity: 12 &mdash; 11 embarked</span>
+        <span class="capacity-info">(Warboss #1 + Boyz #1)</span>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="trukk1">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Big Shoota</span></td><td>36"</td><td>3</td><td>5+</td><td>5</td><td>0</td><td>1</td><td class="wep-kw">Rapid Fire 1</td></tr>
+              <tr><td><span class="ranged">Wreckin' ball</span></td><td>Melee</td><td>1</td><td>4+</td><td>9</td><td>0</td><td>D6</td><td class="wep-kw">Extra Attacks</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Deadly Demise D3</span>
+            <span class="ability-tag core">Firing Deck 1</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Ramshackle: Each time an attack with S7+ targets this, -1D (min 1)</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Trukk #2 -->
+    <tr class="unit-row" data-unit="trukk2">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip transport"></span>Transport</td>
+      <td class="cell-name">Trukk #2</td>
+      <td>1</td>
+      <td class="cell-pts">70</td>
+      <td class="cell-stat">12"</td>
+      <td class="cell-stat">7</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">10</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>&mdash;</td>
+      <td>
+        <span class="capacity-info">Capacity: 12 &mdash; 11 embarked</span>
+        <span class="capacity-info">(Warboss #2 + Boyz #2)</span>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="trukk2">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Big Shoota</span></td><td>36"</td><td>3</td><td>5+</td><td>5</td><td>0</td><td>1</td><td class="wep-kw">Rapid Fire 1</td></tr>
+              <tr><td><span class="ranged">Wreckin' ball</span></td><td>Melee</td><td>1</td><td>4+</td><td>9</td><td>0</td><td>D6</td><td class="wep-kw">Extra Attacks</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Deadly Demise D3</span>
+            <span class="ability-tag core">Firing Deck 1</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Ramshackle: Each time an attack with S7+ targets this, -1D (min 1)</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Battlewagon #1 -->
+    <tr class="unit-row" data-unit="bw1">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip transport"></span>Transport</td>
+      <td class="cell-name">Battlewagon #1 <span class="char-badge">'Ard Case</span></td>
+      <td>1</td>
+      <td class="cell-pts">160</td>
+      <td class="cell-stat">10"</td>
+      <td class="cell-stat">9</td>
+      <td class="cell-stat">3+</td>
+      <td class="cell-stat">16</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">3</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>&mdash;</td>
+      <td>
+        <span class="capacity-info">Capacity: 12 &mdash; 0 embarked</span>
+        <span class="capacity-info">12 remaining</span>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="bw1">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Kannon (Frag)</span></td><td>36"</td><td>D6</td><td>5+</td><td>5</td><td>0</td><td>1</td><td class="wep-kw">Blast</td></tr>
+              <tr><td><span class="ranged">Kannon (Shell)</span></td><td>36"</td><td>1</td><td>5+</td><td>9</td><td>-2</td><td>D6</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td><span class="melee">Deff Rolla</span></td><td>Melee</td><td>6</td><td>3+</td><td>9</td><td>-1</td><td>2</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Deadly Demise D6</span>
+            <span class="ability-tag core">Firing Deck 12</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">'Ard Case: No Firing Deck. Gains 3+ Save.</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Battlewagon #2 -->
+    <tr class="unit-row" data-unit="bw2">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip transport"></span>Transport</td>
+      <td class="cell-name">Battlewagon #2 <span class="char-badge">'Ard Case</span></td>
+      <td>1</td>
+      <td class="cell-pts">160</td>
+      <td class="cell-stat">10"</td>
+      <td class="cell-stat">9</td>
+      <td class="cell-stat">3+</td>
+      <td class="cell-stat">16</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">3</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>&mdash;</td>
+      <td>
+        <span class="capacity-info">Capacity: 12 &mdash; 0 embarked</span>
+        <span class="capacity-info">12 remaining</span>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="bw2">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Kannon (Frag)</span></td><td>36"</td><td>D6</td><td>5+</td><td>5</td><td>0</td><td>1</td><td class="wep-kw">Blast</td></tr>
+              <tr><td><span class="ranged">Kannon (Shell)</span></td><td>36"</td><td>1</td><td>5+</td><td>9</td><td>-2</td><td>D6</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td><span class="melee">Deff Rolla</span></td><td>Melee</td><td>6</td><td>3+</td><td>9</td><td>-1</td><td>2</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Deadly Demise D6</span>
+            <span class="ability-tag core">Firing Deck 12</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">'Ard Case: No Firing Deck. Gains 3+ Save.</span>
+          </div>
+        </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ═══════ OTHER ═══════ -->
+    <tr class="section-header"><td colspan="14">Other</td></tr>
+
+    <!-- Flash Gitz #1 -->
+    <tr class="unit-row" data-unit="fg1">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Flash Gitz #1</td>
+      <td>5</td>
+      <td class="cell-pts">80</td>
+      <td class="cell-stat">5"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+          <option value="warboss1">Warboss #1</option>
+          <option value="warboss2">Warboss #2</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="fg1">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Snazzgun</span></td><td>24"</td><td>3</td><td>4+</td><td>6</td><td>-1</td><td>2</td><td class="wep-kw">Heavy, Sustained Hits 1</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Gun-crazy Show Offs: each unmod hit of 6 scores extra hit</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Flash Gitz #2 -->
+    <tr class="unit-row" data-unit="fg2">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Flash Gitz #2</td>
+      <td>5</td>
+      <td class="cell-pts">80</td>
+      <td class="cell-stat">5"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+          <option value="warboss1">Warboss #1</option>
+          <option value="warboss2">Warboss #2</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="fg2">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Snazzgun</span></td><td>24"</td><td>3</td><td>4+</td><td>6</td><td>-1</td><td>2</td><td class="wep-kw">Heavy, Sustained Hits 1</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Gun-crazy Show Offs: each unmod hit of 6 scores extra hit</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Gretchin (20) -->
+    <tr class="unit-row" data-unit="gretchin1">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Gretchin (x20)</td>
+      <td>20</td>
+      <td class="cell-pts">80</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">8+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select">
+          <option value="zodgrod">Zodgrod Wortsnagga</option>
+        </select>
+        <span class="capacity-info">Paired</span>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="gretchin1">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Grot Blasta</span></td><td>12"</td><td>1</td><td>5+</td><td>3</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Close combat weapon</span></td><td>Melee</td><td>1</td><td>5+</td><td>2</td><td>0</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Cowardly: cannot be set up in Reserves</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Gretchin (10) -->
+    <tr class="unit-row" data-unit="gretchin2">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Gretchin (x10)</td>
+      <td>10</td>
+      <td class="cell-pts">40</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">8+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+          <option value="zodgrod">Zodgrod Wortsnagga</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="">&mdash;</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="gretchin2">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Grot Blasta</span></td><td>12"</td><td>1</td><td>5+</td><td>3</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Close combat weapon</span></td><td>Melee</td><td>1</td><td>5+</td><td>2</td><td>0</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Cowardly: cannot be set up in Reserves</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Kommandos -->
+    <tr class="unit-row" data-unit="kommandos">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Kommandos</td>
+      <td>10</td>
+      <td class="cell-pts">120</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="kommandos">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="ranged">Stikkbombs</span></td><td>8"</td><td>D6</td><td>5+</td><td>3</td><td>0</td><td>1</td><td class="wep-kw">Blast</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Infiltrators</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Sneaky Gitz: -1 to hit when targeted by ranged attacks</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Nobz -->
+    <tr class="unit-row" data-unit="nobz">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Nobz</td>
+      <td>5</td>
+      <td class="cell-pts">105</td>
+      <td class="cell-stat">6"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select">
+          <option value="ghaz">Ghazghkull Thraka</option>
+        </select>
+        <span class="capacity-info">Paired</span>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+          <option value="trukk1">Trukk #1 (12 cap)</option>
+          <option value="trukk2">Trukk #2 (12 cap)</option>
+          <option value="bw1">Battlewagon #1 (12 left)</option>
+          <option value="bw2">Battlewagon #2 (12 left)</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="nobz">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Big Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>7</td><td>-1</td><td>2</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td><span class="melee">Power Klaw</span></td><td>Melee</td><td>3</td><td>4+</td><td>10</td><td>-2</td><td>2</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Da Biggest and Da Strongest: re-roll wound rolls of 1 (melee)</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Stormboyz -->
+    <tr class="unit-row" data-unit="stormboyz">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Stormboyz</td>
+      <td>5</td>
+      <td class="cell-pts">65</td>
+      <td class="cell-stat">12"</td>
+      <td class="cell-stat">5</td>
+      <td class="cell-stat">5+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">1</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="stormboyz">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Slugga</span></td><td>12"</td><td>1</td><td>5+</td><td>4</td><td>0</td><td>1</td><td class="wep-kw">Pistol</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+              <tr><td colspan="8" style="color:var(--text-dim);font-size:11px;text-align:left;">Boss Nob: Power Klaw &mdash; Melee | A:3 | WS:3+ | S:10 | AP:-2 | D:2</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag core">Deep Strike</span>
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Rokkit Pack: can move over models/terrain (FLY during movement)</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- Warbikers -->
+    <tr class="unit-row" data-unit="warbikers">
+      <td><button class="expand-btn" onclick="toggleUnit(this)">+</button></td>
+      <td class="cell-role"><span class="role-pip other"></span>Other</td>
+      <td class="cell-name">Warbikers</td>
+      <td>3</td>
+      <td class="cell-pts">65</td>
+      <td class="cell-stat">12"</td>
+      <td class="cell-stat">6</td>
+      <td class="cell-stat">4+</td>
+      <td class="cell-stat">3</td>
+      <td class="cell-stat">7+</td>
+      <td class="cell-stat">2</td>
+      <td class="cell-enh">&mdash;</td>
+      <td>
+        <select class="pair-select" onchange="updatePairing(this)">
+          <option value="" selected>&mdash; none &mdash;</option>
+        </select>
+      </td>
+      <td>
+        <select class="xport-select">
+          <option value="" selected>&mdash;</option>
+        </select>
+      </td>
+    </tr>
+    <tr class="sub-row" data-parent="warbikers">
+      <td colspan="14">
+        <div class="sub-content">
+          <div class="sub-section-label">Weapons</div>
+          <table class="weapons-table">
+            <thead><tr><th class="wt-name">Weapon</th><th class="wt-range">Range</th><th class="wt-a">A</th><th class="wt-skill">BS/WS</th><th class="wt-s">S</th><th class="wt-ap">AP</th><th class="wt-d">D</th><th class="wt-kw">Keywords</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ranged">Dakkaguns</span></td><td>18"</td><td>6</td><td>5+</td><td>5</td><td>0</td><td>1</td><td class="wep-kw">Rapid Fire 2</td></tr>
+              <tr><td><span class="melee">Choppa</span></td><td>Melee</td><td>3</td><td>3+</td><td>4</td><td>-1</td><td>1</td><td class="wep-kw">&mdash;</td></tr>
+            </tbody>
+          </table>
+          <div class="sub-section-label">Abilities</div>
+          <div class="abilities-list">
+            <span class="ability-tag faction">Waaagh!</span>
+            <span class="ability-tag">Exhaust Cloud: -1 to hit when targeted by ranged attacks after Normal move</span>
+            <span class="ability-tag invuln">Invuln 6+</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    <!-- ═══════ SUMMARY ═══════ -->
+    <tr class="summary-row">
+      <td></td>
+      <td class="summary-label" colspan="2">Army Totals</td>
+      <td><strong id="totalModels">106</strong></td>
+      <td class="summary-pts"><strong id="totalPts">2000</strong></td>
+      <td colspan="6" style="text-align:left;padding-left:10px;font-size:11px;color:var(--text-dim);">
+        21 units &bull; 5 Characters &bull; 4 Battleline &bull; 4 Transports &bull; 8 Other
+      </td>
+      <td></td>
+      <td></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+
+<!-- Footer info -->
+<div style="margin-top:8px; font-size:10px; color:var(--text-dim); display:flex; justify-content:space-between;">
+  <span>Detachment: War Horde &bull; Faction: Orks &bull; Points Limit: 2000</span>
+  <span>MOCKUP &mdash; Table/Spreadsheet View &mdash; wh-calc-3</span>
+</div>
+
+<script>
+  // ── Expand / Collapse individual units ──
+  function toggleUnit(btn) {
+    const unitRow = btn.closest('tr.unit-row');
+    const unitId = unitRow.dataset.unit;
+    const subRows = document.querySelectorAll(`tr.sub-row[data-parent="${unitId}"]`);
+    const isOpen = btn.classList.contains('open');
+
+    if (isOpen) {
+      btn.classList.remove('open');
+      btn.textContent = '+';
+      subRows.forEach(r => r.classList.remove('visible'));
+    } else {
+      btn.classList.add('open');
+      btn.textContent = '\u2212';
+      subRows.forEach(r => r.classList.add('visible'));
+    }
+  }
+
+  // ── Expand All / Collapse All ──
+  function expandAll() {
+    document.querySelectorAll('.expand-btn').forEach(btn => {
+      btn.classList.add('open');
+      btn.textContent = '\u2212';
+    });
+    document.querySelectorAll('tr.sub-row').forEach(r => r.classList.add('visible'));
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('.expand-btn').forEach(btn => {
+      btn.classList.remove('open');
+      btn.textContent = '+';
+    });
+    document.querySelectorAll('tr.sub-row').forEach(r => r.classList.remove('visible'));
+  }
+
+  // ── Expand only weapons or abilities sections ──
+  function expandSection(section) {
+    // First expand all rows so they're visible
+    expandAll();
+    // Then visually highlight the requested section
+    // (In a real app this would filter; here it just expands all for the mockup)
+  }
+
+  // ── Pairing dropdown handler (mockup feedback) ──
+  function updatePairing(sel) {
+    const val = sel.value;
+    const row = sel.closest('tr');
+    const unitName = row.querySelector('.cell-name').textContent.trim();
+
+    if (val) {
+      const optText = sel.options[sel.selectedIndex].text;
+      console.log(`Paired: ${unitName} -> ${optText}`);
+    } else {
+      console.log(`Unparied: ${unitName}`);
+    }
+  }
+
+  // ── Keyboard shortcut: E to expand all, C to collapse all ──
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    if (e.key === 'e' || e.key === 'E') expandAll();
+    if (e.key === 'c' || e.key === 'C') collapseAll();
+  });
+</script>
+
+</body>
+</html>

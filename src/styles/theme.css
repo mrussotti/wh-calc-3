@@ -1,0 +1,29 @@
+:root {
+  --bg-darkest:   #0d0e10;
+  --bg-dark:      #141619;
+  --bg-card:      #1a1d22;
+  --bg-card-head: #22262d;
+  --bg-stat:      #181b20;
+  --bg-sidebar:   #13151a;
+  --border:       #2a2e36;
+  --border-light: #363b45;
+  --text:         #d4d4d8;
+  --text-dim:     #8b8f99;
+  --text-bright:  #eeeef0;
+  --accent-green: #5B8C2A;
+  --accent-green-l: #74a63e;
+  --accent-green-d: #3e6118;
+  --accent-gold:  #c9a84c;
+  --accent-red:   #a83232;
+  --role-char:    #b07ccf;
+  --role-battle:  #4a90d9;
+  --role-trans:   #c9a84c;
+  --role-other:   #6b7280;
+  --capacity-bg:  #1e2128;
+  --font-main:    'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-head:    Georgia, 'Times New Roman', serif;
+  --radius:       6px;
+  --radius-sm:    4px;
+  --shadow:       0 2px 8px rgba(0,0,0,0.45);
+  --shadow-lg:    0 4px 20px rgba(0,0,0,0.6);
+}
