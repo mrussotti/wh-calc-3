@@ -14,7 +14,9 @@ const ROLE_MAP: Record<string, UnitRole> = {
   'dedicated transport': 'dedicated_transports',
   'other datasheets': 'other',
   'other': 'other',
-  'allied units': 'other',
+  'allied units': 'allied',
+  'fortification': 'fortification',
+  'fortifications': 'fortification',
 };
 
 // Match: "Army Name (2000 Points)" or "Army Name (2,000 Points)"
@@ -41,15 +43,13 @@ const WARLORD_RE = /^\u2022\s+Warlord$/i;
 // Footer line to ignore
 const FOOTER_RE = /^Exported with App Version/i;
 
-let unitIdCounter = 0;
+let _globalUnitId = 0;
 
 function nextUnitId(): string {
-  return `unit_${++unitIdCounter}`;
+  return `unit_${++_globalUnitId}`;
 }
 
 export function parseArmyList(text: string): ParsedArmyList {
-  unitIdCounter = 0;
-
   const lines = text.split(/\r?\n/);
   let state: ParserState = 'header';
   let headerLine = 0;
@@ -61,6 +61,7 @@ export function parseArmyList(text: string): ParsedArmyList {
     gameSize: '',
     totalPoints: 0,
     units: [],
+    parseWarnings: [],
   };
 
   let currentRole: UnitRole = 'other';
@@ -111,11 +112,14 @@ export function parseArmyList(text: string): ParsedArmyList {
     // Check for section header
     if (SECTION_HEADER_RE.test(line)) {
       const sectionName = line.toLowerCase().trim();
+      finalizeUnit();
       if (sectionName in ROLE_MAP) {
-        finalizeUnit();
         currentRole = ROLE_MAP[sectionName];
-        continue;
+      } else {
+        result.parseWarnings.push(`Unrecognized section header: "${line}"`);
+        currentRole = 'other';
       }
+      continue;
     }
 
     // Check for unit line

@@ -50,7 +50,7 @@ export function matchWeapons(
           A: wg.A,
           BS_WS: wg.BS_WS ? `${wg.BS_WS}+` : '-',
           S: wg.S,
-          AP: wg.AP === '0' ? '0' : `-${wg.AP}`,
+          AP: wg.AP === '0' ? '0' : wg.AP.startsWith('-') ? wg.AP : `-${wg.AP}`,
           D: wg.D,
           keywords: wg.description,
         });

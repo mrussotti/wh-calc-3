@@ -1,5 +1,6 @@
-import { useArmyStore, getCharacterPairedUnit, useTransportUsedCapacity } from '../../state/army-store.ts';
+import { useArmyStore, useCharacterPairedUnit, useTransportUsedCapacity } from '../../state/army-store.ts';
 import { CapacityBar } from '../shared/CapacityBar.tsx';
+import { ROLE_ORDER, ROLE_TITLES } from '../../constants.ts';
 import type { UnitRole } from '../../types/army-list.ts';
 
 const sectionStyle: React.CSSProperties = {
@@ -124,26 +125,31 @@ function CharacterPairingsPanel() {
   return (
     <div style={sectionStyle}>
       <div style={sectionTitle}>Character Pairings</div>
-      {characters.map(char => {
-        const pairedUnitId = getCharacterPairedUnit(char.instanceId);
-        const pairedUnit = pairedUnitId
-          ? armyList.units.find(u => u.instanceId === pairedUnitId)
-          : null;
+      {characters.map(char => (
+        <CharacterPairingItem key={char.instanceId} character={char} />
+      ))}
+    </div>
+  );
+}
 
-        return (
-          <div key={char.instanceId} style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '3px 0',
-            fontSize: '0.78rem',
-          }}>
-            <span style={{ color: 'var(--role-char)' }}>{char.displayName}</span>
-            <span style={{ color: pairedUnit ? 'var(--text)' : 'var(--text-dim)' }}>
-              {pairedUnit ? pairedUnit.displayName : 'Unassigned'}
-            </span>
-          </div>
-        );
-      })}
+function CharacterPairingItem({ character }: { character: import('../../types/enriched.ts').EnrichedUnit }) {
+  const armyList = useArmyStore(s => s.armyList);
+  const pairedUnitId = useCharacterPairedUnit(character.instanceId);
+  const pairedUnit = pairedUnitId && armyList
+    ? armyList.units.find(u => u.instanceId === pairedUnitId)
+    : null;
+
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '3px 0',
+      fontSize: '0.78rem',
+    }}>
+      <span style={{ color: 'var(--role-char)' }}>{character.displayName}</span>
+      <span style={{ color: pairedUnit ? 'var(--text)' : 'var(--text-dim)' }}>
+        {pairedUnit ? pairedUnit.displayName : 'Unassigned'}
+      </span>
     </div>
   );
 }
@@ -197,37 +203,28 @@ function PointsSummaryPanel() {
   const armyList = useArmyStore(s => s.armyList);
   if (!armyList) return null;
 
-  const byRole: Record<UnitRole, number> = {
-    characters: 0,
-    battleline: 0,
-    dedicated_transports: 0,
-    other: 0,
-  };
+  const byRole = {} as Record<UnitRole, number>;
+  for (const role of ROLE_ORDER) {
+    byRole[role] = 0;
+  }
   for (const u of armyList.units) {
     byRole[u.role] += u.points;
   }
 
-  const labels: Record<UnitRole, string> = {
-    characters: 'Characters',
-    battleline: 'Battleline',
-    dedicated_transports: 'Transports',
-    other: 'Other',
-  };
-
   return (
     <div style={sectionStyle}>
       <div style={sectionTitle}>Points Breakdown</div>
-      {(Object.entries(byRole) as [UnitRole, number][])
-        .filter(([, pts]) => pts > 0)
-        .map(([role, pts]) => (
+      {ROLE_ORDER
+        .filter(role => byRole[role] > 0)
+        .map(role => (
           <div key={role} style={{
             display: 'flex',
             justifyContent: 'space-between',
             padding: '2px 0',
             fontSize: '0.82rem',
           }}>
-            <span style={{ color: 'var(--text-dim)' }}>{labels[role]}</span>
-            <span style={{ color: 'var(--text-bright)', fontWeight: 500 }}>{pts}</span>
+            <span style={{ color: 'var(--text-dim)' }}>{ROLE_TITLES[role]}</span>
+            <span style={{ color: 'var(--text-bright)', fontWeight: 500 }}>{byRole[role]}</span>
           </div>
         ))}
       <div style={{

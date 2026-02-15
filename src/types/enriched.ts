@@ -108,4 +108,5 @@ export interface EnrichedArmyList {
   gameSize: string;
   totalPoints: number;
   units: EnrichedUnit[];
+  parseWarnings: string[];
 }

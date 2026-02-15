@@ -5,6 +5,8 @@ const ROLE_LABELS: Record<UnitRole, string> = {
   battleline: 'Battleline',
   dedicated_transports: 'Transport',
   other: 'Other',
+  allied: 'Allied',
+  fortification: 'Fortification',
 };
 
 const ROLE_COLORS: Record<UnitRole, string> = {
@@ -12,6 +14,8 @@ const ROLE_COLORS: Record<UnitRole, string> = {
   battleline: 'var(--role-battle)',
   dedicated_transports: 'var(--role-trans)',
   other: 'var(--role-other)',
+  allied: 'var(--role-other)',
+  fortification: 'var(--role-other)',
 };
 
 export function RoleBadge({ role }: { role: UnitRole }) {

@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useArmyStore } from '../../state/army-store.ts';
 import type { ViewMode } from '../../types/state.ts';
 
@@ -10,6 +11,7 @@ export function AppHeader() {
   if (!armyList) return null;
 
   return (
+    <>
     <header style={{
       background: 'linear-gradient(135deg, #1a1d22 0%, #22262d 100%)',
       borderBottom: '3px solid var(--accent-green)',
@@ -83,6 +85,56 @@ export function AppHeader() {
         New Import
       </button>
     </header>
+    <WarningsBanner armyList={armyList} />
+    </>
+  );
+}
+
+function WarningsBanner({ armyList }: { armyList: import('../../types/enriched.ts').EnrichedArmyList }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const allWarnings = useMemo(() => {
+    const warnings: string[] = [...armyList.parseWarnings];
+    for (const unit of armyList.units) {
+      for (const w of unit.matchWarnings) {
+        warnings.push(`${unit.displayName}: ${w}`);
+      }
+    }
+    return warnings;
+  }, [armyList]);
+
+  if (allWarnings.length === 0) return null;
+
+  return (
+    <div style={{
+      background: 'rgba(255, 200, 50, 0.08)',
+      borderBottom: '1px solid rgba(255, 200, 50, 0.25)',
+      padding: '6px 24px',
+      fontSize: '0.8rem',
+      color: '#e8c547',
+    }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: '#e8c547',
+          fontSize: '0.8rem',
+          padding: 0,
+          cursor: 'pointer',
+          fontWeight: 500,
+        }}
+      >
+        {expanded ? '\u25BC' : '\u25B6'} {allWarnings.length} warning{allWarnings.length !== 1 ? 's' : ''}
+      </button>
+      {expanded && (
+        <div style={{ marginTop: 4, paddingLeft: 16 }}>
+          {allWarnings.map((w, i) => (
+            <div key={i} style={{ padding: '1px 0' }}>{w}</div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

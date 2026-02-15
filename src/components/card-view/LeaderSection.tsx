@@ -1,4 +1,4 @@
-import { useArmyStore, getCharacterPairedUnit } from '../../state/army-store.ts';
+import { useArmyStore, useCharacterPairedUnit, getEligibleUnitsForLeader } from '../../state/army-store.ts';
 import type { EnrichedUnit } from '../../types/enriched.ts';
 
 export function LeaderSection({ unit }: { unit: EnrichedUnit }) {
@@ -8,18 +8,11 @@ export function LeaderSection({ unit }: { unit: EnrichedUnit }) {
 
   if (!armyList) return null;
 
+  const pairedUnitId = useCharacterPairedUnit(unit.instanceId);
+
   // For characters with leader mapping: show "Leads" dropdown
   if (unit.isCharacter && unit.leaderMapping) {
-    const pairedUnitId = getCharacterPairedUnit(unit.instanceId);
-
-    // Find eligible units this character can lead
-    const eligibleUnits = armyList.units.filter(u => {
-      if (u.instanceId === unit.instanceId) return false;
-      if (u.isCharacter && !u.transportCapacity) return false;
-      return unit.leaderMapping!.canLead.some(
-        name => name.toLowerCase() === u.name.toLowerCase()
-      );
-    });
+    const eligibleUnits = getEligibleUnitsForLeader(armyList, unit);
 
     return (
       <div style={{

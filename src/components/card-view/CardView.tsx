@@ -1,15 +1,8 @@
 import { useArmyStore } from '../../state/army-store.ts';
 import { UnitCard } from './UnitCard.tsx';
+import { ROLE_ORDER, ROLE_TITLES } from '../../constants.ts';
 import type { UnitRole } from '../../types/army-list.ts';
 import type { EnrichedUnit } from '../../types/enriched.ts';
-
-const ROLE_ORDER: UnitRole[] = ['characters', 'battleline', 'dedicated_transports', 'other'];
-const ROLE_TITLES: Record<UnitRole, string> = {
-  characters: 'Characters',
-  battleline: 'Battleline',
-  dedicated_transports: 'Dedicated Transports',
-  other: 'Other Datasheets',
-};
 
 export function CardView() {
   const armyList = useArmyStore(s => s.armyList);

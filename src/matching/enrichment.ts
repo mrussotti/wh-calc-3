@@ -93,6 +93,7 @@ export function enrichArmyList(parsed: ParsedArmyList): EnrichedArmyList {
     gameSize: parsed.gameSize,
     totalPoints: parsed.totalPoints,
     units: enrichedUnits,
+    parseWarnings: parsed.parseWarnings,
   };
 }
 

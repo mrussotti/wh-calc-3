@@ -1,6 +1,6 @@
 /** Types for the parsed army list (output of the text parser) */
 
-export type UnitRole = 'characters' | 'battleline' | 'dedicated_transports' | 'other';
+export type UnitRole = 'characters' | 'battleline' | 'dedicated_transports' | 'other' | 'allied' | 'fortification';
 
 export interface ParsedWeapon {
   name: string;
@@ -32,4 +32,5 @@ export interface ParsedArmyList {
   gameSize: string;
   totalPoints: number;
   units: ParsedUnit[];
+  parseWarnings: string[];
 }

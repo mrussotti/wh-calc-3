@@ -1,16 +1,9 @@
-import { useArmyStore, getCharacterPairedUnit, getUnitTransport, useTransportUsedCapacity } from '../../state/army-store.ts';
+import { useArmyStore, useCharacterPairedUnit, useUnitTransport, useTransportUsedCapacity, getEligibleUnitsForLeader } from '../../state/army-store.ts';
 import { RoleBadge } from '../shared/RoleBadge.tsx';
 import { CapacityBar } from '../shared/CapacityBar.tsx';
+import { ROLE_ORDER, ROLE_TITLES } from '../../constants.ts';
 import type { UnitRole } from '../../types/army-list.ts';
 import type { EnrichedUnit } from '../../types/enriched.ts';
-
-const ROLE_ORDER: UnitRole[] = ['characters', 'battleline', 'dedicated_transports', 'other'];
-const ROLE_TITLES: Record<UnitRole, string> = {
-  characters: 'Characters',
-  battleline: 'Battleline',
-  dedicated_transports: 'Dedicated Transports',
-  other: 'Other Datasheets',
-};
 
 export function TableView() {
   const armyList = useArmyStore(s => s.armyList);
@@ -153,8 +146,8 @@ function UnitRow({ unit, isExpanded, onToggle }: {
   onToggle: () => void;
 }) {
   const primaryStats = unit.modelStats[0];
-  const pairedUnitId = unit.isCharacter ? getCharacterPairedUnit(unit.instanceId) : null;
-  const transportId = getUnitTransport(unit.instanceId);
+  const pairedUnitId = useCharacterPairedUnit(unit.instanceId);
+  const transportId = useUnitTransport(unit.instanceId);
   const armyList = useArmyStore(s => s.armyList);
   const transportUsed = useTransportUsedCapacity(unit.instanceId);
 
@@ -356,6 +349,18 @@ function ExpandedRow({ unit }: { unit: EnrichedUnit }) {
           </div>
         )}
 
+        {/* Warnings */}
+        {unit.matchWarnings.length > 0 && (
+          <div style={{
+            padding: '4px 0 2px',
+            fontSize: '0.72rem',
+            color: 'var(--accent-red)',
+            opacity: 0.8,
+          }}>
+            {unit.matchWarnings.map((w, i) => <div key={i}>{w}</div>)}
+          </div>
+        )}
+
         {/* Leader pairing + Transport assignment */}
         <ExpandedRowControls unit={unit} />
       </td>
@@ -371,8 +376,14 @@ function ExpandedRowControls({ unit }: { unit: EnrichedUnit }) {
   const assignToTransport = useArmyStore(s => s.assignToTransport);
   const removeFromTransport = useArmyStore(s => s.removeFromTransport);
   const transportUsed = useTransportUsedCapacity(unit.instanceId);
+  const pairedUnitId = useCharacterPairedUnit(unit.instanceId);
+  const currentTransportId = useUnitTransport(unit.instanceId);
 
   if (!armyList) return null;
+
+  const eligibleUnits = unit.isCharacter && unit.leaderMapping
+    ? getEligibleUnitsForLeader(armyList, unit)
+    : [];
 
   const dropdownStyle: React.CSSProperties = {
     background: 'var(--bg-stat)',
@@ -401,38 +412,27 @@ function ExpandedRowControls({ unit }: { unit: EnrichedUnit }) {
   return (
     <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 4 }}>
       {/* Character: show "Leads" dropdown */}
-      {unit.isCharacter && unit.leaderMapping && (() => {
-        const pairedUnitId = getCharacterPairedUnit(unit.instanceId);
-        const eligibleUnits = armyList.units.filter(u => {
-          if (u.instanceId === unit.instanceId) return false;
-          if (u.isCharacter && !u.transportCapacity) return false;
-          return unit.leaderMapping!.canLead.some(
-            name => name.toLowerCase() === u.name.toLowerCase()
-          );
-        });
-
-        return (
-          <div style={rowStyle}>
-            <span style={labelStyle}>
-              Leads:
-              {unit.leaderMapping.isSecondaryLeader && (
-                <span style={{ color: 'var(--role-char)', marginLeft: 4, fontSize: '0.7rem' }}>(Secondary)</span>
-              )}
-            </span>
-            <select
-              value={pairedUnitId ?? ''}
-              onChange={e => { e.stopPropagation(); setLeaderPairing(unit.instanceId, e.target.value || null); }}
-              onClick={e => e.stopPropagation()}
-              style={dropdownStyle}
-            >
-              <option value="">-- Unassigned --</option>
-              {eligibleUnits.map(u => (
-                <option key={u.instanceId} value={u.instanceId}>{u.displayName}</option>
-              ))}
-            </select>
-          </div>
-        );
-      })()}
+      {unit.isCharacter && unit.leaderMapping && (
+        <div style={rowStyle}>
+          <span style={labelStyle}>
+            Leads:
+            {unit.leaderMapping.isSecondaryLeader && (
+              <span style={{ color: 'var(--role-char)', marginLeft: 4, fontSize: '0.7rem' }}>(Secondary)</span>
+            )}
+          </span>
+          <select
+            value={pairedUnitId ?? ''}
+            onChange={e => { e.stopPropagation(); setLeaderPairing(unit.instanceId, e.target.value || null); }}
+            onClick={e => e.stopPropagation()}
+            style={dropdownStyle}
+          >
+            <option value="">-- Unassigned --</option>
+            {eligibleUnits.map(u => (
+              <option key={u.instanceId} value={u.instanceId}>{u.displayName}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Non-character unit: show who leads it */}
       {!unit.isCharacter && (leaderPairings[unit.instanceId]?.length ?? 0) > 0 && (
@@ -485,7 +485,6 @@ function ExpandedRowControls({ unit }: { unit: EnrichedUnit }) {
 
       {/* Non-transport, non-character unit: show transport assignment */}
       {!unit.transportCapacity && !unit.isCharacter && (() => {
-        const currentTransportId = getUnitTransport(unit.instanceId);
         const transports = armyList.units.filter(u => u.transportCapacity);
         if (transports.length === 0) return null;
         return (
@@ -495,8 +494,11 @@ function ExpandedRowControls({ unit }: { unit: EnrichedUnit }) {
               value={currentTransportId ?? ''}
               onChange={e => {
                 e.stopPropagation();
-                if (currentTransportId) removeFromTransport(unit.instanceId);
-                if (e.target.value) assignToTransport(unit.instanceId, e.target.value);
+                if (e.target.value) {
+                  assignToTransport(unit.instanceId, e.target.value);
+                } else {
+                  removeFromTransport(unit.instanceId);
+                }
               }}
               onClick={e => e.stopPropagation()}
               style={dropdownStyle}

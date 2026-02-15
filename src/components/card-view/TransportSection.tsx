@@ -1,4 +1,4 @@
-import { useArmyStore, useTransportUsedCapacity, getUnitTransport } from '../../state/army-store.ts';
+import { useArmyStore, useTransportUsedCapacity, useUnitTransport } from '../../state/army-store.ts';
 import { CapacityBar } from '../shared/CapacityBar.tsx';
 import type { EnrichedUnit } from '../../types/enriched.ts';
 
@@ -8,6 +8,7 @@ export function TransportSection({ unit }: { unit: EnrichedUnit }) {
   const assignToTransport = useArmyStore(s => s.assignToTransport);
   const removeFromTransport = useArmyStore(s => s.removeFromTransport);
   const usedCapacity = useTransportUsedCapacity(unit.instanceId);
+  const currentTransportId = useUnitTransport(unit.instanceId);
 
   if (!armyList) return null;
 
@@ -65,7 +66,6 @@ export function TransportSection({ unit }: { unit: EnrichedUnit }) {
   }
 
   // For non-transport units: show transport assignment
-  const currentTransportId = getUnitTransport(unit.instanceId);
   if (unit.isCharacter) return null; // Characters embark with their unit
 
   const transports = armyList.units.filter(u => u.transportCapacity);
@@ -83,8 +83,11 @@ export function TransportSection({ unit }: { unit: EnrichedUnit }) {
       <select
         value={currentTransportId ?? ''}
         onChange={e => {
-          if (currentTransportId) removeFromTransport(unit.instanceId);
-          if (e.target.value) assignToTransport(unit.instanceId, e.target.value);
+          if (e.target.value) {
+            assignToTransport(unit.instanceId, e.target.value);
+          } else {
+            removeFromTransport(unit.instanceId);
+          }
         }}
         style={{
           background: 'var(--bg-stat)',

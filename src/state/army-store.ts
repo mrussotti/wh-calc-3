@@ -7,6 +7,7 @@ import type { EnrichedArmyList, EnrichedUnit } from '../types/enriched.ts';
 import { parseArmyList } from '../parser/army-list-parser.ts';
 import { enrichArmyList } from '../matching/enrichment.ts';
 import { loadWahapediaData } from '../data/index.ts';
+import { MAX_LEADERS_PER_UNIT } from '../constants.ts';
 
 export const useArmyStore = create<ArmyStore>((set, get) => ({
   // State
@@ -88,9 +89,9 @@ export const useArmyStore = create<ArmyStore>((set, get) => ({
       const canLeadNames = character.leaderMapping.canLead.map(n => n.toLowerCase());
       if (!canLeadNames.includes(targetUnit.name.toLowerCase())) return;
 
-      // Validate: max 2 leaders per unit
+      // Validate: max leaders per unit
       const existingLeaders = newPairings[unitId] ?? [];
-      if (existingLeaders.length >= 2) return;
+      if (existingLeaders.length >= MAX_LEADERS_PER_UNIT) return;
 
       // If already has 1 leader, the new one must be a secondary leader
       if (existingLeaders.length === 1) {
@@ -304,8 +305,8 @@ export function useTransportUsedCapacity(transportId: string): number {
 export function getAvailableLeaderSlots(unitId: string): number {
   const state = useArmyStore.getState();
   const leaders = state.leaderPairings[unitId] ?? [];
-  if (leaders.length >= 2) return 0;
-  if (leaders.length === 0) return 2;
+  if (leaders.length >= MAX_LEADERS_PER_UNIT) return 0;
+  if (leaders.length === 0) return MAX_LEADERS_PER_UNIT;
 
   // Has 1 leader — can add a secondary
   const army = state.armyList;
@@ -334,4 +335,38 @@ export function getUnitTransport(unitId: string): string | null {
     if (units.includes(unitId)) return transportId;
   }
   return null;
+}
+
+/** Reactive hook — re-renders when leader pairings change */
+export function useCharacterPairedUnit(characterId: string): string | null {
+  return useArmyStore(state => {
+    for (const [unitId, leaders] of Object.entries(state.leaderPairings)) {
+      if (leaders.includes(characterId)) return unitId;
+    }
+    return null;
+  });
+}
+
+/** Reactive hook — re-renders when transport allocations change */
+export function useUnitTransport(unitId: string): string | null {
+  return useArmyStore(state => {
+    for (const [transportId, units] of Object.entries(state.transportAllocations)) {
+      if (units.includes(unitId)) return transportId;
+    }
+    return null;
+  });
+}
+
+/** Find units eligible for a character to lead */
+export function getEligibleUnitsForLeader(
+  armyList: EnrichedArmyList,
+  character: EnrichedUnit,
+): EnrichedUnit[] {
+  if (!character.leaderMapping) return [];
+  const canLeadNames = character.leaderMapping.canLead.map(n => n.toLowerCase());
+  return armyList.units.filter(u => {
+    if (u.instanceId === character.instanceId) return false;
+    if (u.isCharacter && !u.transportCapacity) return false;
+    return canLeadNames.includes(u.name.toLowerCase());
+  });
 }
