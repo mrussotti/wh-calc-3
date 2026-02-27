@@ -20,6 +20,18 @@
   --role-trans:   #c9a84c;
   --role-other:   #6b7280;
   --capacity-bg:  #1e2128;
+  --accent-blue:  #4a90d9;
+  --accent-blue-l:#6daef0;
+  --accent-blue-d:#2d6bb3;
+  --accent-orange:#d97b2a;
+  --bg-panel:     #161920;
+  --funnel-fill:  #5B8C2A;
+  --funnel-empty: #181b20;
+  --funnel-hit:   #4a90d9;
+  --funnel-wound: #c9a84c;
+  --funnel-save:  #d97b2a;
+  --funnel-dmg:   #a83232;
+  --funnel-kill:  #b07ccf;
   --font-main:    'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-head:    Georgia, 'Times New Roman', serif;
   --radius:       6px;

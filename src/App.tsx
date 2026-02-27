@@ -5,6 +5,7 @@ import { Sidebar } from './components/layout/Sidebar.tsx';
 import { ImportPanel } from './components/import/ImportPanel.tsx';
 import { CardView } from './components/card-view/CardView.tsx';
 import { TableView } from './components/table-view/TableView.tsx';
+import { AnalyticsShell } from './components/analytics/AnalyticsShell.tsx';
 
 function App() {
   const armyList = useArmyStore(s => s.armyList);
@@ -12,6 +13,15 @@ function App() {
 
   if (!armyList) {
     return <ImportPanel />;
+  }
+
+  if (viewMode === 'analytics') {
+    return (
+      <>
+        <AppHeader />
+        <AnalyticsShell />
+      </>
+    );
   }
 
   return (

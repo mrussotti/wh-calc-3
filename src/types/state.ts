@@ -2,7 +2,7 @@
 
 import type { EnrichedArmyList } from './enriched.ts';
 
-export type ViewMode = 'card' | 'table';
+export type ViewMode = 'card' | 'table' | 'analytics';
 
 export interface ArmyState {
   armyList: EnrichedArmyList | null;

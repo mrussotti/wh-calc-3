@@ -1,0 +1,285 @@
+@startuml Attack Sequence Engine
+skinparam ActivityBackgroundColor #1a1a2e
+skinparam ActivityBorderColor #4a4a6a
+skinparam ActivityFontColor #e0e0e0
+skinparam ActivityDiamondBackgroundColor #16213e
+skinparam ActivityDiamondBorderColor #4a4a6a
+skinparam ActivityDiamondFontColor #e0e0e0
+skinparam ArrowColor #7f8fa6
+skinparam NoteBackgroundColor #0f3460
+skinparam NoteBorderColor #4a4a6a
+skinparam NoteFontColor #e0e0e0
+skinparam PartitionBackgroundColor #0a0a1a
+skinparam PartitionBorderColor #4a4a6a
+skinparam PartitionFontColor #e0e0e0
+skinparam BackgroundColor #0a0a1a
+skinparam TitleFontColor #e94560
+skinparam TitleFontSize 18
+
+title 10th Edition Attack Sequence Engine
+
+start
+
+partition "**calculateUnitAttack**" {
+  :Resolve **defensive modifiers** from defender.modifiers;
+  note right
+    saveModifier: SUM
+    feelNoPain: MIN (best)
+    damageReduction: SUM values, MAX minimums
+    invulnerableSave: MIN (best)
+    hitModifier: SUM
+    woundModifier: SUM
+    halfDamage: OR
+    rerollSaves: UPGRADE (ones < all_failed)
+  end note
+
+  :Filter weapons by **phase**
+  (shooting → ranged only, fighting → melee only);
+
+  while (For each **enabled** weapon) is (next weapon)
+
+    :Get **activeKeywords** = parsedKeywords filtered by overrides;
+
+    :Resolve **offensive modifiers**
+    (army + unit + model + weapon + keywords + context);
+    note right
+      bsModifier: SUM (unclamped)
+      wsModifier: SUM (unclamped)
+      hitRollModifier: SUM → clamp [-1,+1]
+      woundRollModifier: SUM → clamp [-1,+1]
+      rerollHits: UPGRADE (ones < all_failed < fish)
+      rerollWounds: UPGRADE (ones < all_failed < fish)
+      apModifier: SUM
+      strengthModifier: SUM
+      attacksModifier: SUM
+      critHitThreshold: MIN → clamp [2,6]
+      critWoundThreshold: MIN → clamp [2,6]
+      sustainedHitsValue: MAX (best value)
+      hasLethalHits: OR
+      hasDevastatingWounds: OR
+      ──────────────────────
+      **Keyword effects merged:**
+      heavy + didNotMove → hit +1
+      lance + isCharging → wound +1
+      twin_linked → rerollWounds = all_failed
+      sustained_hits(N) → MAX into value
+      lethal_hits → true
+      devastating_wounds → true
+    end note
+
+    partition "**calculateWeaponAttack**" {
+
+      partition "Step 1: Total Attacks" {
+        :baseAttacks = resolveAverage(weapon.A)
+        totalAttacks = baseAttacks × weaponCount
+                     + offMods.attacksModifier;
+
+        if (Blast?) then (yes)
+          :totalAttacks += floor(defender.modelCount / 5)
+                         × weaponCount;
+        endif
+
+        if (Rapid Fire N + halfRange?) then (yes)
+          :totalAttacks += N × weaponCount;
+        endif
+
+        if (Extra Attacks N?) then (yes)
+          :totalAttacks += N × weaponCount;
+        endif
+
+        :totalAttacks = max(0, totalAttacks);
+      }
+
+      partition "Step 2: Hit Roll" {
+        if (Torrent?) then (yes)
+          :normalHits = totalAttacks
+          criticalHits = 0;
+          note right: Auto-hit, no crits
+        elseif (Overwatch?) then (yes)
+          :calculateHits(attacks, threshold=6,
+            reroll=offMods.rerollHits,
+            critThreshold=offMods.critHitThreshold);
+          note right: 6s only, no hit mods, but rerolls + crits apply
+        else (normal)
+          :bsWs = parseThreshold(weapon.BS_WS);
+          if (bsWs == null?) then (yes)
+            :normalHits = 0
+            criticalHits = 0;
+          else (no)
+            :bsWsMod = isMelee ? wsModifier : bsModifier
+            modifiedBsWs = bsWs - bsWsMod (unclamped)
+            netHitMod = clamp(offMods.hitRollMod
+                       + defMods.hitModifier, -1, +1)
+            hitThreshold = modifiedBsWs - netHitMod;
+
+            :calculateHits(totalAttacks, hitThreshold,
+              offMods.rerollHits, offMods.critHitThreshold);
+            note right
+              critProb = P(roll >= critThreshold)
+              normalProb = P(roll >= threshold) - critProb
+              missProb = 1 - normalProb - critProb
+
+              Reroll ones: += (1/6) × probs
+              Reroll all_failed: += missProb × probs
+              Fish for crits: sacrifice normal hits
+                critP' = critP + (1-critP) × critP
+                normP' = (1-critP) × normP
+            end note
+          endif
+        endif
+
+        :totalHits = normalHits + criticalHits;
+
+        if (sustainedHitsValue > 0?) then (yes)
+          :totalHits += criticalHits × sustainedHitsValue;
+          note right
+            Extra hits from sustained go through
+            wound roll normally. They are NOT
+            counted as criticalHits.
+          end note
+        endif
+      }
+
+      partition "Step 3: Wound Roll" {
+        :weaponStrength = resolveAverage(weapon.S)
+                        + offMods.strengthModifier;
+
+        :woundThresholdBase = getWoundThreshold(S, T);
+        note right
+          S >= 2T → 2+
+          S > T   → 3+
+          S == T  → 4+
+          S < T   → 5+
+          S <= T/2 → 6+
+        end note
+
+        :netWoundMod = clamp(offMods.woundRollMod
+                     + defMods.woundModifier, -1, +1)
+        woundThreshold = base - netWoundMod;
+
+        :Check Anti-X keywords against
+        defender.keywords → lower critWoundThreshold;
+
+        :calculateWounds(totalHits, criticalHits,
+          woundThreshold, rerollWounds,
+          critWoundThreshold, hasLethalHits);
+        note right
+          **Lethal Hits:**
+            autoWounds = criticalHits (skip wound roll)
+            hitsNeedingWoundRoll = totalHits - autoWounds
+
+          critWoundProb = P(roll >= critWoundThreshold)
+          normalWoundProb = P(roll >= threshold) - critWoundProb
+
+          Rerolls: same pattern as hit rerolls
+
+          **Output:**
+            normalWounds (from roll)
+            criticalWounds (from roll)
+            autoWounds (from Lethal Hits)
+            totalWounds = normal + critical + auto
+        end note
+      }
+
+      partition "Step 4: Saving Throw" {
+        :weaponAP = abs(resolveAverage(weapon.AP))
+        totalAP = weaponAP + offMods.apModifier
+        effectiveInvuln = defMods.invulnSave
+                       ?? defender.invulnerableSave;
+
+        :calculateSaves(normalWounds, criticalWounds,
+          autoWounds, defender.save, totalAP,
+          effectiveInvuln, defMods.saveModifier,
+          hasDevastatingWounds, hasIgnoresCover,
+          defMods.rerollSaves);
+        note right
+          **Devastating Wounds:**
+            mortalWounds = criticalWounds (bypass saves)
+            woundsNeedingSave = normalWounds
+              + autoWounds
+              + (devWounds ? 0 : criticalWounds)
+
+          **Armor Save:**
+            modified = armorSave + totalAP
+            IF cover AND NOT ignoresCover:
+              modified -= saveModifier
+
+          **Invuln Save:**
+            bestSave = min(modifiedArmor, invuln)
+            (invuln unaffected by AP or cover)
+
+          **Save Rerolls:**
+            ones: saveProb += (1/6) × saveProb
+            all_failed: saveProb += failProb × saveProb
+
+          **Result:**
+            normalUnsavedWounds = woundsNeedingSave × failProb
+            mortalWounds (from dev wounds)
+        end note
+      }
+
+      partition "Step 5: Damage" {
+        :baseDamage = resolveAverage(weapon.D)
+        meltaBonus = (Melta N + halfRange) ? N : 0;
+
+        :Normal wounds: apply damage mods
+        normalDmg = baseDamage;
+
+        if (halfDamage?) then (yes)
+          :normalDmg = ceil(normalDmg / 2);
+          note right: Step 5a: halve first
+        endif
+
+        :normalDmg += meltaBonus;
+        note right: Step 5b: add melta after halving
+
+        if (damageReduction > 0?) then (yes)
+          :normalDmg = max(minimum,
+            normalDmg - reduction);
+          note right: Step 5c: subtract last
+        endif
+
+        :Dev wounds: unmodified damage
+        devDmg = baseDamage + meltaBonus;
+        note right
+          Devastating wounds bypass
+          all damage modifications
+          (half damage, reduction)
+        end note
+
+        :totalDamage = normalUnsavedWounds × normalDmg
+                     + mortalWounds × devDmg;
+      }
+
+      partition "Step 6: Feel No Pain" {
+        :fnp = defMods.feelNoPain ?? defender.feelNoPain;
+        if (fnp != null?) then (yes)
+          :damageAfterFnp = totalDamage × (1 - P(roll >= fnp));
+        else (no)
+          :damageAfterFnp = totalDamage;
+        endif
+      }
+
+      partition "Step 7: Precision & Kills" {
+        if (Precision keyword?) then (yes)
+          :precisionDamageAfterFnp = damageAfterFnp;
+          note right: All damage marked as precision
+        else (no)
+          :precisionDamageAfterFnp = 0;
+        endif
+
+        :modelsKilled = damageAfterFnp / defender.wounds;
+        note right: Fractional average, not rounded
+      }
+    }
+
+  endwhile (done)
+
+  :Aggregate unit totals:
+  totalDamageAfterFnp = SUM(weapon.damageAfterFnp)
+  totalModelsKilled = totalDamageAfterFnp / defender.wounds;
+}
+
+stop
+
+@enduml

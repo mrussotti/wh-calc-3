@@ -68,6 +68,7 @@ export function AppHeader() {
       <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
         <ViewToggle mode="card" current={viewMode} onClick={setViewMode} label="Cards" />
         <ViewToggle mode="table" current={viewMode} onClick={setViewMode} label="Table" />
+        <ViewToggle mode="analytics" current={viewMode} onClick={setViewMode} label="Analytics" />
       </div>
 
       <button
